@@ -20,6 +20,7 @@
   "license": "MIT",
   "scripts": {
     "prepare": "husky install",
+    "commitlint": "commitlint",
     "lint-staged": "lint-staged",
     "lint": "eslint .",
     "build": "rimraf lib && jsii",
