@@ -15,6 +15,7 @@ dist
 !.jsii.gz
 
 .idea
+.husky
 .github
 adr
 example
