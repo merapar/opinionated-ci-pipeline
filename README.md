@@ -50,10 +50,10 @@ and be able to deploy your own custom environment from the CLI as well.
 
 ### 1. Install
 
-Install (replace `HASH` with the latest commit hash):
+Install:
 
 ```bash
-npm install -d git@bitbucket.org:merapar/opinionated-cdk-pipeline.git#HASH
+npm install -D opinionated-ci-pipeline
 ```
 
 ### 2. Setup environments
