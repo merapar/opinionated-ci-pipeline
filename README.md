@@ -1,5 +1,8 @@
 # Opinionated CDK CI Pipeline
 
+[![NPM](https://img.shields.io/npm/v/opinionated-ci-pipeline?color=blue)](https://www.npmjs.com/package/opinionated-ci-pipeline)
+[![PyPI](https://img.shields.io/pypi/v/opinionated-ci-pipeline?color=blue)](https://pypi.org/project/opinionated-ci-pipeline/)
+
 CI/CD utilizing [CDK Pipelines](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.pipelines-readme.html).
 
 Features:
@@ -50,10 +53,16 @@ and be able to deploy your own custom environment from the CLI as well.
 
 ### 1. Install
 
-Install:
+For Node.js:
 
 ```bash
 npm install -D opinionated-ci-pipeline
+```
+
+For Python:
+
+```bash
+pip install opinionated-ci-pipeline
 ```
 
 ### 2. Setup environments
