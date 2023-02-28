@@ -20,13 +20,10 @@
   "license": "MIT",
   "scripts": {
     "prepare": "husky install",
-    "commitlint": "commitlint",
-    "lint-staged": "lint-staged",
     "lint": "eslint .",
     "build": "rimraf lib && jsii",
     "package": "rimraf dist && jsii-pacmak",
-    "release": "standard-version",
-    "publib": "publib-npm"
+    "release": "standard-version"
   },
   "dependencies": {
     "lodash": "^4.17.21"

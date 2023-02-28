@@ -401,13 +401,13 @@ to generate packages for different languages.
 Install dependencies:
 
 ```bash
-pnpm install
+npm install
 ```
 
 Build:
 
 ```bash
-pnpm build
+npm run build
 ```
 
 Install and deploy example application:
