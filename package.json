@@ -25,7 +25,8 @@
     "lint": "eslint .",
     "build": "rimraf lib && jsii",
     "package": "rimraf dist && jsii-pacmak",
-    "release": "standard-version"
+    "release": "standard-version",
+    "publib": "publib-npm"
   },
   "dependencies": {
     "lodash": "^4.17.21"
@@ -55,6 +56,7 @@
     "jsii": "1.75.0",
     "jsii-pacmak": "1.75.0",
     "lint-staged": "13.1.2",
+    "publib": "0.2.606",
     "rimraf": "4.1.2",
     "source-map-support": "0.5.21",
     "standard-version": "9.5.0",

@@ -22,6 +22,7 @@ importers:
       jsii-pacmak: 1.75.0
       lint-staged: 13.1.2
       lodash: ^4.17.21
+      publib: 0.2.606
       rimraf: 4.1.2
       source-map-support: 0.5.21
       standard-version: 9.5.0
@@ -46,6 +47,7 @@ importers:
       jsii: 1.75.0
       jsii-pacmak: 1.75.0
       lint-staged: 13.1.2
+      publib: 0.2.606
       rimraf: 4.1.2
       source-map-support: 0.5.21
       standard-version: 9.5.0
@@ -1337,6 +1339,12 @@ packages:
 
   /@types/aws-lambda/8.10.110:
     resolution: {integrity: sha512-r6egf2Cwv/JaFTTrF9OXFVUB3j/SXTgM9BwrlbBRjWAa2Tu6GWoDoLflppAZ8uSfbUJdXvC7Br3DjuN9pQ2NUQ==}
+    dev: true
+
+  /@types/fs-extra/8.1.2:
+    resolution: {integrity: sha512-SvSrYXfWSc7R4eqnOzbQF4TZmfpNSM9FrSWLU3EUnWBuyZqNBOrv1B1JA3byUDPUl9z4Ab3jeZG2eDdySlgNMg==}
+    dependencies:
+      '@types/node': 18.11.18
     dev: true
 
   /@types/json-schema/7.0.11:
@@ -3529,6 +3537,15 @@ packages:
     resolution: {integrity: sha512-3ouUOpQhtgrbOa17J7+uxOTpITYWaGP7/AhoR3+A+/1e9skrzelGi/dXzEYyvbxubEF6Wn2ypscTKiKJFFn1ag==}
     dev: true
 
+  /publib/0.2.606:
+    resolution: {integrity: sha512-fi9m/B07bq+7GEV4pNEvbRSGK9Zo7os2mGmDzdiA93W1To9gtTSP7fn/EvJy2i/rstVemS+yz4obWnxUztc//w==}
+    hasBin: true
+    dependencies:
+      '@types/fs-extra': 8.1.2
+      fs-extra: 8.1.0
+      shlex: 2.1.2
+    dev: true
+
   /punycode/2.3.0:
     resolution: {integrity: sha512-rRV+zQD8tVFys26lAGR9WUuS4iUAngJScM+ZRSKtvl5tKeZ2t5bvdNFdNHBW9FWR4guGHlgmsZ1G7BSm2wTbuA==}
     engines: {node: '>=6'}
@@ -3736,6 +3753,10 @@ packages:
   /shebang-regex/3.0.0:
     resolution: {integrity: sha512-7++dFhtcx3353uBaq8DDR4NuxBetBzC7ZQOhmTQInHEd6bSrXdiEyzCvG07Z44UYdLShWUyXt5M/yhz8ekcb1A==}
     engines: {node: '>=8'}
+    dev: true
+
+  /shlex/2.1.2:
+    resolution: {integrity: sha512-Nz6gtibMVgYeMEhUjp2KuwAgqaJA1K155dU/HuDaEJUGgnmYfVtVZah+uerVWdH8UGnyahhDCgABbYTbs254+w==}
     dev: true
 
   /signal-exit/3.0.7:
