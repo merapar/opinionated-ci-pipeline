@@ -1,0 +1,84 @@
+{
+  "name": "opinionated-ci-pipeline",
+  "version": "0.1.0",
+  "description": "CI/CD on AWS with feature-branch builds, developer-environment deployments, and build status notifications.",
+  "keywords": [
+    "aws",
+    "cdk",
+    "ci",
+    "ci/cd",
+    "codepipeline",
+    "codebuild"
+  ],
+  "author": {
+    "name": "Maciej Radzikowski",
+    "email": "maciej.radzikowski@merapar.com"
+  },
+  "repository": {
+    "url": "https://github.com/merapar/opinionated-ci-pipeline.git"
+  },
+  "license": "MIT",
+  "scripts": {
+    "prepare": "husky install",
+    "lint": "eslint .",
+    "build": "rimraf lib && jsii",
+    "package": "rimraf dist && jsii-pacmak"
+  },
+  "dependencies": {
+    "lodash": "^4.17.21"
+  },
+  "bundledDependencies": [
+    "lodash"
+  ],
+  "peerDependencies": {
+    "aws-cdk-lib": "^2.63.0",
+    "constructs": "^10.0.0"
+  },
+  "devDependencies": {
+    "@aws-lambda-powertools/logger": "1.5.1",
+    "@aws-sdk/client-codepipeline": "3.262.0",
+    "@aws-sdk/client-eventbridge": "3.262.0",
+    "@commitlint/cli": "17.4.4",
+    "@commitlint/config-conventional": "17.4.4",
+    "@types/aws-lambda": "8.10.110",
+    "@types/lodash": "4.14.191",
+    "@types/node": "18.11.18",
+    "@typescript-eslint/eslint-plugin": "5.53.0",
+    "@typescript-eslint/parser": "5.53.0",
+    "aws-cdk-lib": "2.63.0",
+    "constructs": "10.0.0",
+    "eslint": "8.34.0",
+    "husky": "^8.0.0",
+    "jsii": "1.75.0",
+    "jsii-pacmak": "1.75.0",
+    "rimraf": "4.1.2",
+    "source-map-support": "0.5.21",
+    "typescript": "3.9.10"
+  },
+  "commitlint": {
+    "extends": [
+      "@commitlint/config-conventional"
+    ]
+  },
+  "stability": "experimental",
+  "types": "lib/index.d.ts",
+  "main": "lib/index.js",
+  "jsii": {
+    "outdir": "dist",
+    "versionFormat": "short",
+    "forceConsistentCasingInFileNames": true,
+    "excludeTypescript": [
+      "example/**/*"
+    ],
+    "tsc": {
+      "outDir": "lib",
+      "rootDir": "src"
+    },
+    "targets": {
+      "python": {
+        "distName": "opinionated-ci-pipeline",
+        "module": "opinionated_ci_pipeline"
+      }
+    }
+  }
+}
