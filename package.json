@@ -20,6 +20,7 @@
   "license": "MIT",
   "scripts": {
     "prepare": "husky install",
+    "lint-staged": "lint-staged",
     "lint": "eslint .",
     "build": "rimraf lib && jsii",
     "package": "rimraf dist && jsii-pacmak"
@@ -51,9 +52,13 @@
     "husky": "^8.0.0",
     "jsii": "1.75.0",
     "jsii-pacmak": "1.75.0",
+    "lint-staged": "13.1.2",
     "rimraf": "4.1.2",
     "source-map-support": "0.5.21",
     "typescript": "3.9.10"
+  },
+  "lint-staged": {
+    "*.ts": "eslint --max-warnings=0"
   },
   "commitlint": {
     "extends": [
