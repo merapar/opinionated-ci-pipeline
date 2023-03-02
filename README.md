@@ -105,7 +105,7 @@ replace the content with an instance of `CDKApplication`:
 #!/usr/bin/env node
 import 'source-map-support/register';
 import {ExampleStack} from '../lib/exampleStack';
-import {CDKApplication} from 'opinionated-cdk-pipeline';
+import {CDKApplication} from 'opinionated-ci-pipeline';
 
 new CDKApplication({
     projectName: 'myproject',
