@@ -1,0 +1,57 @@
+name: Release Beta
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build_and_release:
+    name: Build and release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0 # fetch full history, so changelog can be generated
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - run: npm ci
+
+      - name: git config
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+      - name: Create release
+        id: create_release
+        run: |
+          npm run release -- --prerelease beta
+          echo ::set-output name=tag_name::$(git describe HEAD --abbrev=0)
+
+      - run: npm run build
+      - run: npm run package
+
+      - run: npx publib
+        env:
+          NPM_DIST_TAG: beta
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
+
+      - uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          tags: true
+
+      - name: Generate Release body
+        run: npx extract-changelog-release > RELEASE_BODY.md
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag_name: ${{ steps.create_release.outputs.tag_name }}
+          body_path: RELEASE_BODY.md
+          prerelease: true
