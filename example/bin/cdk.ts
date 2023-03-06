@@ -4,10 +4,9 @@ import {ExampleStack} from '../src/exampleStack';
 import {CDKApplication} from 'opinionated-cdk-pipeline';
 
 new CDKApplication({
-    projectName: 'ci-example',
     stacks: {
-        create: (scope, envName) => {
-            new ExampleStack(scope, 'ExampleStack', {stackName: `ci-example-${envName}-ExampleStack`});
+        create: (scope, projectName, envName) => {
+            new ExampleStack(scope, 'ExampleStack', {stackName: `${projectName}-${envName}-ExampleStack`});
         },
     },
     repository: {

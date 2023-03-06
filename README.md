@@ -21,7 +21,7 @@ Currently supported source repositories are GitHub and Bitbucket.
 - [Table of contents](#table-of-contents)
 - [Usage](#usage)
     - [1. Install](#1-install)
-    - [2. Setup environments](#2-setup-environments)
+    - [2. Set context parameters](#2-set-context-parameters)
     - [3. Create `CDKApplication`](#3-create-cdkapplication)
     - [4. Create repository access token secret](#4-create-repository-access-token-secret)
         - [GitHub](#github)
@@ -65,15 +65,16 @@ For Python:
 pip install opinionated-ci-pipeline
 ```
 
-### 2. Setup environments
+### 2. Set context parameters
 
-Add environments config in the `cdk.json` as `context` parameters.
+Add project name and environments config in the `cdk.json` as `context` parameters.
 Each environment must have `account` and `region` provided.
 
 ```json
 {
   "app": "...",
   "context": {
+    "projectName": "myproject",
     "environments": {
       "default": {
         "account": "111111111111",
@@ -87,6 +88,8 @@ Each environment must have `account` and `region` provided.
   }
 }
 ```
+
+The project name will be used as a prefix for the deployed CI Stack name.
 
 Environment names should match environments provided later
 in the `CDKApplication` configuration.
@@ -108,15 +111,14 @@ import {ExampleStack} from '../lib/exampleStack';
 import {CDKApplication} from 'opinionated-cdk-pipeline';
 
 new CDKApplication({
-    projectName: 'myproject',
     stacks: {
-        create: (scope, envName) => {
-            new ExampleStack(scope, 'ExampleStack', {stackName: `pipelinetest-${envName}-ExampleStack`});
+        create: (scope, projectName, envName) => {
+            new ExampleStack(scope, 'ExampleStack', {stackName: `${projectName}-${envName}-ExampleStack`});
         },
     },
     repository: {
-        type: 'bitbucket',
-        name: 'merapar/repository',
+        type: 'github',
+        name: 'organization/repository',
     },
     packageManager: 'npm',
     pipeline: [
@@ -203,7 +205,7 @@ of "native" CodePipeline and CodeBuild integrations with GitHub and Bitbucket,
 the CI builds use CodeCommit as a source.
 You must configure GitHub / Bitbucket to mirror the repository to CodeCommit.
 
-CI stack creates a CodeCommit repository (named the same as provided `projectName`)
+CI stack creates a CodeCommit repository (named the same as the `projectName` context value)
 and IAM user `{PROJECT_NAME}-ci-repository-mirror-user` with access to it.
 
 #### GitHub
@@ -282,14 +284,6 @@ to deploy arbitrary environments.
         <th>Name</th>
         <th>Type</th>
         <th>Description</th>
-    </tr>
-    <tr>
-        <td>projectName</td>
-        <td>string</td>
-        <td>
-Short name identyfing the project.
-It will be used as a prefix for deployed resource names.
-        </td>
     </tr>
     <tr>
         <td>stacks</td>

@@ -8,7 +8,7 @@ import * as path from 'path';
 import {NotificationsTopic} from './notificationsTopic';
 import {CodePipeline, CodePipelineProps, CodePipelineSource, ShellStep, Wave} from 'aws-cdk-lib/pipelines';
 import {merge} from 'lodash';
-import {getEnvironmentConfig} from '../util/environment';
+import {getEnvironmentConfig, getProjectName} from '../util/context';
 import {Aws, Stack} from 'aws-cdk-lib';
 import {assertUnreachable} from '../util/types';
 import {AppStage} from './appStage';
@@ -17,7 +17,7 @@ import {Code} from 'aws-cdk-lib/aws-lambda';
 import {Topic} from 'aws-cdk-lib/aws-sns';
 
 export interface MainPipelineProps extends Pick<ResolvedApplicationProps,
-    'projectName' | 'stacks' | 'repository' | 'commands' |
+    'stacks' | 'repository' | 'commands' |
     'pipeline' | 'cdkOutputDirectory' | 'codeBuild' | 'codePipeline'
 > {
     codeCommitRepository: Repository;
@@ -63,7 +63,7 @@ export class MainPipeline extends Construct {
 
         this.createPipelineBuildNotifications(pipeline, props.repository.host, props.repositoryApiDestination);
 
-        this.failuresTopic = this.createPipelineFailuresTopic(pipeline, props.projectName);
+        this.failuresTopic = this.createPipelineFailuresTopic(pipeline);
     }
 
     private isWave(waveOrEnvironment: WaveDeployment | EnvironmentDeployment): waveOrEnvironment is WaveDeployment {
@@ -130,9 +130,9 @@ export class MainPipeline extends Construct {
         }
     }
 
-    private createPipelineFailuresTopic(pipeline: CodePipeline, projectName: string): Topic {
+    private createPipelineFailuresTopic(pipeline: CodePipeline): Topic {
         const failuresTopic = new NotificationsTopic(this, 'PipelineFailuresTopic', {
-            projectName: projectName,
+            projectName: getProjectName(this),
             notificationName: 'pipelineFailures',
         });
 

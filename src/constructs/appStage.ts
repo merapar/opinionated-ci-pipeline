@@ -1,6 +1,7 @@
 import {Stage, StageProps} from 'aws-cdk-lib';
 import {Construct} from 'constructs';
 import {IStacksCreation} from '../applicationProps';
+import {getProjectName} from '../util/context';
 
 export interface AppStageProps extends StageProps {
     envName: string;
@@ -13,6 +14,6 @@ export class AppStage extends Stage {
 
         this.node.setContext('env', props.envName);
 
-        props.stacks.create(this, props.envName);
+        props.stacks.create(this, getProjectName(this), props.envName);
     }
 }

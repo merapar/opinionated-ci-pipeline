@@ -13,9 +13,10 @@ import {ResolvedApplicationProps} from '../applicationProps';
 import {PolicyStatement} from 'aws-cdk-lib/aws-iam';
 import {Code} from 'aws-cdk-lib/aws-lambda';
 import {Topic} from 'aws-cdk-lib/aws-sns';
+import {getProjectName} from '../util/context';
 
 export interface FeatureBranchBuildsProps extends Pick<ResolvedApplicationProps,
-    'projectName' | 'repository' | 'commands' | 'codeBuild'
+    'repository' | 'commands' | 'codeBuild'
 > {
     codeCommitRepository: Repository;
     repositoryApiDestination: ApiDestination;
@@ -35,7 +36,7 @@ export class FeatureBranchBuilds extends Construct {
         );
         this.createDeployNotifications(deployProject, props.repository.host, props.repositoryApiDestination);
 
-        this.failuresTopic = this.createBuildFailuresTopic(deployProject, props.projectName);
+        this.failuresTopic = this.createBuildFailuresTopic(deployProject);
 
         this.createDestroyProject(
             source, props.codeBuild, props.commands, props.codeCommitRepository, props.repository.defaultBranch,
@@ -141,9 +142,9 @@ export class FeatureBranchBuilds extends Construct {
         }
     }
 
-    private createBuildFailuresTopic(deployProject: Project, projectName: string): Topic {
+    private createBuildFailuresTopic(deployProject: Project): Topic {
         const failuresTopic = new NotificationsTopic(this, 'FeatureBranchBuildFailuresTopic', {
-            projectName: projectName,
+            projectName: getProjectName(this),
             notificationName: 'featureBranchBuildFailures',
         });
 

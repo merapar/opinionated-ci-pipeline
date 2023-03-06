@@ -7,12 +7,6 @@ import {Construct} from 'constructs';
 export interface ApplicationProps {
 
     /**
-     * Short name identyfing the project.
-     * It will be used as a prefix for deployed resource names.
-     */
-    readonly projectName: string;
-
-    /**
      * An object with a create() method to create Stacks for the application.
      *
      * The same Stacks will be deployed with main pipeline, feature-branch builds, and local deployments.
@@ -85,7 +79,7 @@ export interface IStacksCreation {
      * to distinguish them when deploying multiple environments
      * (like feature-branch environments) to the same account.
      */
-    create(scope: Construct, envName: string): void;
+    create(scope: Construct, projectName: string, envName: string): void;
 }
 
 export interface RepositoryProps {

@@ -11,6 +11,7 @@ import {ApplicationProps, defaultProps, ResolvedApplicationProps} from './applic
 import {SlackChannelConfiguration} from 'aws-cdk-lib/aws-chatbot';
 import {Topic} from 'aws-cdk-lib/aws-sns';
 import {NotificationsTopic} from './constructs/notificationsTopic';
+import {getProjectName} from './util/context';
 
 const defaultCommands: { [key in NonNullable<ApplicationProps['packageManager']>]: Exclude<ApplicationProps['commands'], undefined> } = {
     npm: {
@@ -32,15 +33,13 @@ export interface CIStackProps extends StackProps, ApplicationProps {
 
 export class CIStack extends Stack {
     constructor(scope: Construct, id: string, props: CIStackProps) {
-        super(scope, id, {
-            stackName: `${props.projectName}-ci`,
-            ...props,
-        });
+        super(scope, id, props);
 
         const resolvedProps = this.resolveProps(props);
+        const projectName = getProjectName(this);
 
-        const repository = this.createCodeCommitRepository(props.projectName);
-        const repositoryApiDestination = this.createRepositoryApiDestination(props.projectName, props.repository);
+        const repository = this.createCodeCommitRepository();
+        const repositoryApiDestination = this.createRepositoryApiDestination(props.repository);
 
         const mainPipeline = new MainPipeline(this, 'MainPipeline', {
             ...resolvedProps,
@@ -55,7 +54,7 @@ export class CIStack extends Stack {
         });
 
         if (resolvedProps.slackNotifications.workspaceId && resolvedProps.slackNotifications.channelId) {
-            this.createSlackNotifications(resolvedProps.projectName, resolvedProps.slackNotifications, mainPipeline.failuresTopic, featureBranchBuilds.failuresTopic);
+            this.createSlackNotifications(projectName, resolvedProps.slackNotifications, mainPipeline.failuresTopic, featureBranchBuilds.failuresTopic);
         }
     }
 
@@ -67,9 +66,9 @@ export class CIStack extends Stack {
         return defaultsDeep(cloneDeep(props), defaultProps) as ResolvedApplicationProps;
     }
 
-    private createCodeCommitRepository(projectName: string): Repository {
+    private createCodeCommitRepository(): Repository {
         const repository = new Repository(this, 'Repository', {
-            repositoryName: projectName,
+            repositoryName: getProjectName(this),
         });
 
         const mirrorUser = new User(this, 'RepositoryMirrorUser', {
@@ -80,7 +79,9 @@ export class CIStack extends Stack {
         return repository;
     }
 
-    private createRepositoryApiDestination(projectName: string, repository: ApplicationProps['repository']): ApiDestination {
+    private createRepositoryApiDestination(repository: ApplicationProps['repository']): ApiDestination {
+        const projectName = getProjectName(this);
+
         switch (repository.host) {
         case 'github':
             return new ApiDestination(this, 'GitHubDestination', {

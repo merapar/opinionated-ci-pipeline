@@ -2,6 +2,7 @@
   "app": "npx ts-node --prefer-ts-exts bin/cdk.ts",
   "requireApproval": "never",
   "context": {
+    "projectName": "ci-example",
     "environments": {
       "default": {
         "account": "821414908126",
