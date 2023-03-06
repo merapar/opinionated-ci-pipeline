@@ -115,7 +115,7 @@ new CDKApplication({
         },
     },
     repository: {
-        type: 'bitbucket',
+        host: 'bitbucket',
         name: 'merapar/repository',
     },
     packageManager: 'npm',
