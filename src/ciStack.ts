@@ -1,8 +1,7 @@
 import {SecretValue, Stack, StackProps} from 'aws-cdk-lib';
 import {Construct} from 'constructs';
 import {cloneDeep, defaultsDeep, merge} from 'lodash';
-import {Repository} from 'aws-cdk-lib/aws-codecommit';
-import {ManagedPolicy, User} from 'aws-cdk-lib/aws-iam';
+import {ManagedPolicy} from 'aws-cdk-lib/aws-iam';
 import {ApiDestination, Authorization, Connection, HttpMethod, HttpParameter} from 'aws-cdk-lib/aws-events';
 import {FeatureBranchBuilds} from './constructs/featureBranchBuilds';
 import {MainPipeline} from './constructs/mainPipeline';
@@ -12,6 +11,8 @@ import {SlackChannelConfiguration} from 'aws-cdk-lib/aws-chatbot';
 import {Topic} from 'aws-cdk-lib/aws-sns';
 import {NotificationsTopic} from './constructs/notificationsTopic';
 import {getProjectName} from './util/context';
+import {StringParameter} from 'aws-cdk-lib/aws-ssm';
+import {MirrorRepository} from './constructs/mirrorRepository';
 
 const defaultCommands: { [key in NonNullable<ApplicationProps['packageManager']>]: Exclude<ApplicationProps['commands'], undefined> } = {
     npm: {
@@ -38,18 +39,26 @@ export class CIStack extends Stack {
         const resolvedProps = this.resolveProps(props);
         const projectName = getProjectName(this);
 
-        const repository = this.createCodeCommitRepository();
-        const repositoryApiDestination = this.createRepositoryApiDestination(props.repository);
+        const repoTokenParam = StringParameter.fromSecureStringParameterAttributes(this, 'RepositoryTokenParam', {
+            parameterName: `/${getProjectName(this)}/ci/repositoryAccessToken`,
+        });
+
+        const mirror = new MirrorRepository(this, 'MirrorRepository', {
+            repoTokenParam: repoTokenParam,
+            repository: resolvedProps.repository,
+        });
+
+        const repositoryApiDestination = this.createRepositoryApiDestination(props.repository); // TODO Delete
 
         const mainPipeline = new MainPipeline(this, 'MainPipeline', {
             ...resolvedProps,
-            codeCommitRepository: repository,
+            codeCommitRepository: mirror.codeCommitRepository,
             repositoryApiDestination,
         });
 
         const featureBranchBuilds = new FeatureBranchBuilds(this, 'FeatureBranchBuilds', {
             ...resolvedProps,
-            codeCommitRepository: repository,
+            codeCommitRepository: mirror.codeCommitRepository,
             repositoryApiDestination,
         });
 
@@ -64,19 +73,6 @@ export class CIStack extends Stack {
         }
 
         return defaultsDeep(cloneDeep(props), defaultProps) as ResolvedApplicationProps;
-    }
-
-    private createCodeCommitRepository(): Repository {
-        const repository = new Repository(this, 'Repository', {
-            repositoryName: getProjectName(this),
-        });
-
-        const mirrorUser = new User(this, 'RepositoryMirrorUser', {
-            userName: `${this.stackName}-repository-mirror-user`,
-        });
-        repository.grantPullPush(mirrorUser);
-
-        return repository;
     }
 
     private createRepositoryApiDestination(repository: ApplicationProps['repository']): ApiDestination {
