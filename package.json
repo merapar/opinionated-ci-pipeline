@@ -21,16 +21,13 @@
   "scripts": {
     "prepare": "husky install",
     "lint": "eslint .",
-    "build": "rimraf lib && jsii",
+    "build": "rimraf lib && node esbuild.mjs && jsii",
     "package": "rimraf dist && jsii-pacmak",
     "release": "standard-version"
   },
   "dependencies": {
     "lodash": "^4.17.21"
   },
-  "bundledDependencies": [
-    "lodash"
-  ],
   "peerDependencies": {
     "aws-cdk-lib": "^2.63.0",
     "constructs": "^10.0.0"
@@ -39,7 +36,6 @@
     "@aws-lambda-powertools/logger": "1.5.1",
     "@aws-sdk/client-codebuild": "3.282.0",
     "@aws-sdk/client-codepipeline": "3.262.0",
-    "@aws-sdk/client-eventbridge": "3.262.0",
     "@aws-sdk/client-ssm": "3.282.0",
     "@commitlint/cli": "17.4.4",
     "@commitlint/config-conventional": "17.4.4",
@@ -50,6 +46,7 @@
     "@typescript-eslint/parser": "5.53.0",
     "aws-cdk-lib": "2.63.0",
     "constructs": "10.0.0",
+    "esbuild": "0.17.11",
     "eslint": "8.34.0",
     "husky": "^8.0.0",
     "jsii": "1.75.0",
@@ -78,7 +75,8 @@
     "versionFormat": "short",
     "forceConsistentCasingInFileNames": true,
     "excludeTypescript": [
-      "example/**/*"
+      "example/**/*",
+      "src/lambda/**/*"
     ],
     "tsc": {
       "outDir": "lib",
@@ -90,5 +88,8 @@
         "module": "opinionated_ci_pipeline"
       }
     }
-  }
+  },
+  "bundleDependencies": [
+    "lodash"
+  ]
 }

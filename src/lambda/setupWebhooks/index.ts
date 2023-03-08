@@ -1,23 +1,17 @@
 import {Logger} from '@aws-lambda-powertools/logger';
 import {CloudFormationCustomResourceEvent} from 'aws-lambda/trigger/cloudformation-custom-resource';
-import {GetParameterCommand, SSMClient} from '@aws-sdk/client-ssm';
+import {createWebhook} from './createWebhook';
+import {deleteWebhook} from './deleteWebhook';
+import {getSSMParameter} from '../shared/ssm';
 
 const logger = new Logger();
-
-const ssm = new SSMClient({});
 
 export const handler = async (event: CloudFormationCustomResourceEvent): Promise<Result> => {
     logger.info('Event', {event});
 
     const properties = event.ResourceProperties as Properties;
 
-    const repositoryToken = (await ssm.send(new GetParameterCommand({
-        Name: properties.RepositoryTokenParamName,
-        WithDecryption: true,
-    }))).Parameter?.Value;
-    if (!repositoryToken) {
-        throw new Error(`Unable to retrieve SSM parameter "${properties.RepositoryTokenParamName}"`);
-    }
+    const repositoryToken = await getSSMParameter(properties.RepositoryTokenParamName);
 
     switch (event.RequestType) {
     case 'Create':
@@ -34,31 +28,12 @@ export const handler = async (event: CloudFormationCustomResourceEvent): Promise
 const onCreate = async (properties: Properties, repositoryToken: string): Promise<Result> => {
     logger.info('Creating webhook');
 
-    if (properties.RepositoryHost === 'bitbucket') {
-        const response = await fetch(`https://api.bitbucket.org/2.0/repositories/${properties.RepositoryName}/hooks`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${repositoryToken}`,
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                description: `${properties.StackName} Mirror to AWS CodeCommit`,
-                url: properties.WebhookUrl,
-                active: true,
-                events: ['repo:push'],
-            }),
-        });
-        if (response.status == 201) {
-            const webhookId = ((await response.json()) as Record<string, string>).uuid;
-            logger.info('Webhook created', {webhookId});
-            return {
-                PhysicalResourceId: webhookId,
-            };
-        }
-        throw new Error(`Unable to create webhook. Status: ${response.status}, response: ${await response.text()}`);
-    } else {
-        throw new Error(`Unsupported repository host: ${properties.RepositoryHost}`);
-    }
+    const webhookId = await createWebhook(properties.RepositoryHost, repositoryToken, properties.RepositoryName, properties.WebhookUrl, `${properties.StackName} Mirror to AWS CodeCommit`);
+    logger.info('Webhook created', {webhookId});
+
+    return {
+        PhysicalResourceId: webhookId,
+    };
 };
 
 const onUpdate = async (webhookId: string, properties: Properties, repositoryToken: string): Promise<Result> => {
@@ -76,30 +51,11 @@ const onUpdate = async (webhookId: string, properties: Properties, repositoryTok
 const onDelete = async (webhookId: string, properties: Properties, repositoryToken: string): Promise<Result> => {
     logger.info('Deleting webhook', {webhookId});
 
-    if (properties.RepositoryHost === 'bitbucket') {
-        const response = await fetch(`https://api.bitbucket.org/2.0/repositories/${properties.RepositoryName}/hooks/${webhookId}`, {
-            method: 'DELETE',
-            headers: {
-                'Authorization': `Bearer ${repositoryToken}`,
-                'Content-Type': 'application/json',
-            },
-        });
-        if (response.status == 204) {
-            logger.info('Webhook deleted', {webhookId});
-            return {
-                PhysicalResourceId: webhookId,
-            };
-        }
-        if (response.status == 404) {
-            logger.info('Webhook not found', {webhookId});
-            return {
-                PhysicalResourceId: webhookId,
-            };
-        }
-        throw new Error(`Unable to delete webhook. Status: ${response.status}, response: ${await response.text()}`);
-    } else {
-        throw new Error(`Unsupported repository host: ${properties.RepositoryHost}`);
-    }
+    await deleteWebhook(properties.RepositoryHost, repositoryToken, properties.RepositoryName, webhookId);
+
+    return {
+        PhysicalResourceId: webhookId,
+    };
 };
 
 interface Properties {

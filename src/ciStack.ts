@@ -1,11 +1,10 @@
-import {SecretValue, Stack, StackProps} from 'aws-cdk-lib';
+import {Stack, StackProps} from 'aws-cdk-lib';
 import {Construct} from 'constructs';
 import {cloneDeep, defaultsDeep, merge} from 'lodash';
 import {ManagedPolicy} from 'aws-cdk-lib/aws-iam';
-import {ApiDestination, Authorization, Connection, HttpMethod, HttpParameter} from 'aws-cdk-lib/aws-events';
 import {FeatureBranchBuilds} from './constructs/featureBranchBuilds';
 import {MainPipeline} from './constructs/mainPipeline';
-import {assertUnreachable, notEmpty} from './util/types';
+import {notEmpty} from './util/types';
 import {ApplicationProps, defaultProps, ResolvedApplicationProps} from './applicationProps';
 import {SlackChannelConfiguration} from 'aws-cdk-lib/aws-chatbot';
 import {Topic} from 'aws-cdk-lib/aws-sns';
@@ -39,27 +38,25 @@ export class CIStack extends Stack {
         const resolvedProps = this.resolveProps(props);
         const projectName = getProjectName(this);
 
-        const repoTokenParam = StringParameter.fromSecureStringParameterAttributes(this, 'RepositoryTokenParam', {
+        const repositoryTokenParam = StringParameter.fromSecureStringParameterAttributes(this, 'RepositoryTokenParam', {
             parameterName: `/${getProjectName(this)}/ci/repositoryAccessToken`,
         });
 
         const mirror = new MirrorRepository(this, 'MirrorRepository', {
-            repoTokenParam: repoTokenParam,
+            repoTokenParam: repositoryTokenParam,
             repository: resolvedProps.repository,
         });
-
-        const repositoryApiDestination = this.createRepositoryApiDestination(props.repository); // TODO Delete
 
         const mainPipeline = new MainPipeline(this, 'MainPipeline', {
             ...resolvedProps,
             codeCommitRepository: mirror.codeCommitRepository,
-            repositoryApiDestination,
+            repositoryTokenParam,
         });
 
         const featureBranchBuilds = new FeatureBranchBuilds(this, 'FeatureBranchBuilds', {
             ...resolvedProps,
             codeCommitRepository: mirror.codeCommitRepository,
-            repositoryApiDestination,
+            repositoryTokenParam,
         });
 
         if (resolvedProps.slackNotifications.workspaceId && resolvedProps.slackNotifications.channelId) {
@@ -73,43 +70,6 @@ export class CIStack extends Stack {
         }
 
         return defaultsDeep(cloneDeep(props), defaultProps) as ResolvedApplicationProps;
-    }
-
-    private createRepositoryApiDestination(repository: ApplicationProps['repository']): ApiDestination {
-        const projectName = getProjectName(this);
-
-        switch (repository.host) {
-        case 'github':
-            return new ApiDestination(this, 'GitHubDestination', {
-                connection: new Connection(this, 'GitHubConnection', {
-                    authorization: Authorization.apiKey(
-                        'Authorization',
-                        SecretValue.secretsManager(`/${projectName}/githubAuthorization`, {jsonField: 'header'}),
-                    ),
-                    description: 'GitHub repository connection',
-                    headerParameters: {
-                        'Accept': HttpParameter.fromString('application/vnd.github+json'),
-                        'X-GitHub-Api-Version': HttpParameter.fromString('2022-11-28'),
-                    },
-                }),
-                endpoint: `https://api.github.com/repos/${repository.name}/statuses/*`,
-                httpMethod: HttpMethod.POST,
-            });
-        case 'bitbucket':
-            return new ApiDestination(this, 'BitbucketDestination', {
-                connection: new Connection(this, 'BitbucketConnection', {
-                    authorization: Authorization.apiKey(
-                        'Authorization',
-                        SecretValue.secretsManager(`/${projectName}/bitbucketAuthorization`, {jsonField: 'header'}),
-                    ),
-                    description: 'Bitbucket repository connection',
-                }),
-                endpoint: `https://api.bitbucket.org/2.0/repositories/${repository.name}/commit/*/statuses/build`,
-                httpMethod: HttpMethod.POST,
-            });
-        default:
-            return assertUnreachable(repository.host);
-        }
     }
 
     private createSlackNotifications(

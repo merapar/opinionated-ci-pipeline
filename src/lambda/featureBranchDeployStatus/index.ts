@@ -1,13 +1,15 @@
 import {Logger} from '@aws-lambda-powertools/logger';
-import {EventBridgeClient, PutEventsCommand} from '@aws-sdk/client-eventbridge';
 import {CodeBuildCloudWatchStateHandler} from 'aws-lambda';
+import {transformStatusName} from '../shared/transformStatusName';
+import {getSSMParameter} from '../shared/ssm';
+import {sendCommitStatus} from '../shared/commitStatus';
 
-const REPOSITORY_TYPE = process.env.REPOSITORY_TYPE || '';
-const EVENT_SOURCE_NAME = process.env.EVENT_SOURCE_NAME || '';
+const REPOSITORY_HOST = process.env.REPOSITORY_HOST || '';
+const REPOSITORY_NAME = process.env.REPOSITORY_NAME || '';
+const REPOSITORY_TOKEN_PARAM_NAME = process.env.REPOSITORY_TOKEN_PARAM_NAME || '';
+const REGION = process.env.AWS_REGION || '';
 
 const logger = new Logger();
-
-const eventBridge = new EventBridgeClient({});
 
 export const handler: CodeBuildCloudWatchStateHandler = async (event) => {
     logger.info('Event', {event});
@@ -16,64 +18,14 @@ export const handler: CodeBuildCloudWatchStateHandler = async (event) => {
     const buildId = buildArn.split('/')[1];
     const commitSha = event.detail['additional-information']['source-version'];
 
-    const state = transformStateName(REPOSITORY_TYPE, event.detail['build-status']);
-
-    if (!state) {
-        logger.warn('Ignoring unsupported state change');
+    const status = transformStatusName(REPOSITORY_HOST, event.detail['build-status']);
+    if (!status) {
+        logger.warn('Ignoring unsupported status change');
         return;
     }
 
-    await eventBridge.send(new PutEventsCommand({
-        Entries: [{
-            Source: EVENT_SOURCE_NAME,
-            DetailType: event['detail-type'],
-            Detail: JSON.stringify({
-                'project-name': projectName,
-                'build-id': buildId,
-                'state': state,
-                'commit-sha': commitSha,
-            }),
-        }],
-    }));
-};
+    const repositoryToken = await getSSMParameter(REPOSITORY_TOKEN_PARAM_NAME);
 
-const transformStateName = (repositoryType: string, state: string): string | null => {
-    switch (repositoryType.toLowerCase()) {
-    case 'github':
-        return transformStateNameForGitHub(state);
-    case 'bitbucket':
-        return transformStateNameForBitbucket(state);
-    default:
-        return null;
-    }
-};
-
-const transformStateNameForGitHub = (state: string): string | null => {
-    switch (state) {
-    case 'IN_PROGRESS':
-        return 'pending';
-    case 'SUCCEEDED':
-        return 'success';
-    case 'FAILED':
-        return 'failure';
-    case 'STOPPED':
-        return 'error';
-    default:
-        return null;
-    }
-};
-
-const transformStateNameForBitbucket = (state: string): string | null => {
-    switch (state) {
-    case 'IN_PROGRESS':
-        return 'INPROGRESS';
-    case 'SUCCEEDED':
-        return 'SUCCESSFUL';
-    case 'FAILED':
-        return state;
-    case 'STOPPED':
-        return state;
-    default:
-        return null;
-    }
+    const buildUrl = `https://${REGION}.console.aws.amazon.com/codesuite/codebuild/projects/${projectName}/build/${buildId}`;
+    await sendCommitStatus(REPOSITORY_HOST, REPOSITORY_NAME, repositoryToken, status, commitSha, projectName, buildUrl, 'Feature branch deployment on AWS CodeBuild');
 };

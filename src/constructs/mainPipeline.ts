@@ -1,5 +1,4 @@
 import {Repository} from 'aws-cdk-lib/aws-codecommit';
-import {ApiDestination, EventField, Rule, RuleTargetInput} from 'aws-cdk-lib/aws-events';
 import * as targets from 'aws-cdk-lib/aws-events-targets';
 import {Construct} from 'constructs';
 import {ApplicationProps, EnvironmentDeployment, IStacksCreation, ResolvedApplicationProps, WaveDeployment} from '../applicationProps';
@@ -10,18 +9,18 @@ import {CodePipeline, CodePipelineProps, CodePipelineSource, ShellStep, Wave} fr
 import {merge} from 'lodash';
 import {getEnvironmentConfig, getProjectName} from '../util/context';
 import {Aws, Stack} from 'aws-cdk-lib';
-import {assertUnreachable} from '../util/types';
 import {AppStage} from './appStage';
 import {PolicyStatement} from 'aws-cdk-lib/aws-iam';
 import {Code} from 'aws-cdk-lib/aws-lambda';
 import {Topic} from 'aws-cdk-lib/aws-sns';
+import {IStringParameter} from 'aws-cdk-lib/aws-ssm';
 
 export interface MainPipelineProps extends Pick<ResolvedApplicationProps,
     'stacks' | 'repository' | 'commands' |
     'pipeline' | 'cdkOutputDirectory' | 'codeBuild' | 'codePipeline'
 > {
     codeCommitRepository: Repository;
-    repositoryApiDestination: ApiDestination;
+    repositoryTokenParam: IStringParameter;
 }
 
 export class MainPipeline extends Construct {
@@ -61,7 +60,7 @@ export class MainPipeline extends Construct {
 
         pipeline.buildPipeline();
 
-        this.createPipelineBuildNotifications(pipeline, props.repository.host, props.repositoryApiDestination);
+        this.createPipelineBuildNotifications(pipeline, props.repository, props.repositoryTokenParam);
 
         this.failuresTopic = this.createPipelineFailuresTopic(pipeline);
     }
@@ -157,72 +156,25 @@ export class MainPipeline extends Construct {
      *   - send custom event to EventBridge including the commit SHA,
      * - use EventBridge to send build status to repository.
      */
-    private createPipelineBuildNotifications(
-        pipeline: CodePipeline,
-        repositoryType: ApplicationProps['repository']['host'],
-        repositoryApiDestination: ApiDestination,
-    ) {
-        const pipelineBuildStatusEventsSourceName = `${Stack.of(this).stackName}.pipelineBuildStatus`;
-
+    private createPipelineBuildNotifications(pipeline: CodePipeline, repository: ApplicationProps['repository'], repoTokenParam: IStringParameter) {
         const pipelineBuildStatusFunction = new CustomNodejsFunction(this, 'PipelineBuildStatus', {
             code: Code.fromAsset(path.join(__dirname, '..', 'lambda', 'pipelineBuildStatus')),
             environment: {
-                'REPOSITORY_TYPE': repositoryType,
-                'EVENT_SOURCE_NAME': pipelineBuildStatusEventsSourceName,
+                REPOSITORY_HOST: repository.host,
+                REPOSITORY_NAME: repository.name,
+                REPOSITORY_TOKEN_PARAM_NAME: repoTokenParam.parameterName,
             },
         });
+        repoTokenParam.grantRead(pipelineBuildStatusFunction);
 
         pipelineBuildStatusFunction.addToRolePolicy(new PolicyStatement({
             actions: ['codepipeline:GetPipelineExecution'],
             resources: [`arn:aws:codepipeline:${Aws.REGION}:${Aws.ACCOUNT_ID}:${pipeline.pipeline.pipelineName}`],
         }));
-        pipelineBuildStatusFunction.addToRolePolicy(new PolicyStatement({
-            actions: ['events:PutEvents'],
-            resources: [`arn:aws:events:${Aws.REGION}:${Aws.ACCOUNT_ID}:event-bus/default`],
-            conditions: {
-                StringEquals: {
-                    'events:source': pipelineBuildStatusEventsSourceName,
-                },
-            },
-        }));
 
         pipeline.pipeline.onStateChange('OnPipelineStateChange', {
             target: new targets.LambdaFunction(pipelineBuildStatusFunction),
         });
-
-        new Rule(this, 'SendPipelineStatusToRepositoryRule', {
-            eventPattern: {
-                source: [pipelineBuildStatusEventsSourceName],
-                detailType: ['CodePipeline Pipeline Execution State Change'],
-            },
-            targets: [
-                new targets.ApiDestination(repositoryApiDestination, {
-                    pathParameterValues: ['$.detail.commit-sha'],
-                    event: this.createStatusEvent(repositoryType),
-                }),
-            ],
-        });
-    }
-
-    private createStatusEvent(repositoryType: ApplicationProps['repository']['host']): RuleTargetInput {
-        switch (repositoryType) {
-        case 'github':
-            return RuleTargetInput.fromObject({
-                'state': EventField.fromPath('$.detail.state'),
-                'target_url': `https://${EventField.fromPath('$.region')}.console.aws.amazon.com/codesuite/codepipeline/pipelines/${EventField.fromPath('$.detail.pipeline-name')}/executions/${EventField.fromPath('$.detail.execution-id')}`,
-                'context': EventField.fromPath('$.detail.pipeline-name'),
-            });
-        case 'bitbucket':
-            return RuleTargetInput.fromObject({
-                'key': 'AWS-PIPELINE-BUILD',
-                'state': EventField.fromPath('$.detail.state'),
-                'name': EventField.fromPath('$.detail.pipeline-name'),
-                'description': 'AWS CodePipeline',
-                'url': `https://${EventField.fromPath('$.region')}.console.aws.amazon.com/codesuite/codepipeline/pipelines/${EventField.fromPath('$.detail.pipeline-name')}/executions/${EventField.fromPath('$.detail.execution-id')}`,
-            });
-        default:
-            return assertUnreachable(repositoryType);
-        }
     }
 }
 
