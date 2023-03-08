@@ -15,7 +15,11 @@ new CDKApplication({
     },
     packageManager: 'pnpm',
     commands: {
-        preInstall: ['cd example'],
+        preInstall: [
+            'npm install',
+            'npm run build',
+            'cd example',
+        ],
     },
     cdkOutputDirectory: 'example/cdk.out',
     pipeline: [
