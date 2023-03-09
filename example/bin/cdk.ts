@@ -10,7 +10,7 @@ new CDKApplication({
         },
     },
     repository: {
-        host: 'bitbucket',
+        host: 'github',
         name: 'merapar/opinionated-cdk-pipeline',
     },
     packageManager: 'pnpm',
