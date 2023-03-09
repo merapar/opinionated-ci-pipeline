@@ -27,12 +27,11 @@ for both CodePipeline and CodeBuild in a universal way complicated.
 To streamline connecting repositories and be able to setup the projects
 in a uniform way no matter where the repository is hosted,
 the CI creates an AWS CodeCommit repository to act as a source.
-This repository should be set up as a mirror for the external repository.
 
-Additional connecting modes may be added in the future.
+Then, the CI creates a webhook in the source repository that triggers
+a CodeBuild job that syncs the source repository with the CodeCommit.
 
 ## Consequences
 
 1. Uniform way of setting up CodeBuild and CodePipeline jobs.
-2. Additional steps required when integrating the CI to setup source repository mirroring.
-3. Requires GitHub Actions / Bitbucket Pipelines enabled.
+2. Additional latency before starting the build.

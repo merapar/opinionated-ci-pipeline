@@ -7,5 +7,5 @@ node_modules
 lib
 dist
 .jsii
-tsconfig.json
+/tsconfig.json
 tsconfig.tsbuildinfo

@@ -1,25 +1,25 @@
 import {Aws, Stack} from 'aws-cdk-lib';
 import {BuildSpec, Project, Source} from 'aws-cdk-lib/aws-codebuild';
 import {Repository} from 'aws-cdk-lib/aws-codecommit';
-import {ApiDestination, EventField, OnEventOptions, Rule, RuleTargetInput} from 'aws-cdk-lib/aws-events';
+import {EventField, OnEventOptions, RuleTargetInput} from 'aws-cdk-lib/aws-events';
 import * as targets from 'aws-cdk-lib/aws-events-targets';
 import {CodeBuildProject} from 'aws-cdk-lib/aws-events-targets';
 import {Construct} from 'constructs';
 import {CustomNodejsFunction} from './customNodejsFunction';
 import * as path from 'path';
 import {NotificationsTopic} from './notificationsTopic';
-import {assertUnreachable} from '../util/types';
-import {ResolvedApplicationProps} from '../applicationProps';
+import {ApplicationProps, ResolvedApplicationProps} from '../applicationProps';
 import {PolicyStatement} from 'aws-cdk-lib/aws-iam';
 import {Code} from 'aws-cdk-lib/aws-lambda';
 import {Topic} from 'aws-cdk-lib/aws-sns';
 import {getProjectName} from '../util/context';
+import {IStringParameter} from 'aws-cdk-lib/aws-ssm';
 
 export interface FeatureBranchBuildsProps extends Pick<ResolvedApplicationProps,
     'repository' | 'commands' | 'codeBuild'
 > {
     codeCommitRepository: Repository;
-    repositoryApiDestination: ApiDestination;
+    repositoryTokenParam: IStringParameter;
 }
 
 export class FeatureBranchBuilds extends Construct {
@@ -34,7 +34,7 @@ export class FeatureBranchBuilds extends Construct {
         const deployProject = this.createDeployProject(
             source, props.codeBuild, props.commands, props.codeCommitRepository, props.repository.defaultBranch,
         );
-        this.createDeployNotifications(deployProject, props.repository.host, props.repositoryApiDestination);
+        this.createDeployNotifications(deployProject, props.repository, props.repositoryTokenParam);
 
         this.failuresTopic = this.createBuildFailuresTopic(deployProject);
 
@@ -82,64 +82,20 @@ export class FeatureBranchBuilds extends Construct {
         return deployProject;
     }
 
-    private createDeployNotifications(deployProject: Project, repositoryType: FeatureBranchBuildsProps['repository']['host'], repositoryApiDestination: ApiDestination) {
-        const deployStatusEventSourceName = `${Stack.of(this).stackName}.featureBranchDeployStatus`;
-
+    private createDeployNotifications(deployProject: Project, repository: ApplicationProps['repository'], repoTokenParam: IStringParameter) {
         const deployStatusFunction = new CustomNodejsFunction(this, 'DeployStatus', {
             code: Code.fromAsset(path.join(__dirname, '..', 'lambda', 'featureBranchDeployStatus')),
             environment: {
-                'REPOSITORY_TYPE': repositoryType,
-                'EVENT_SOURCE_NAME': deployStatusEventSourceName,
+                REPOSITORY_HOST: repository.host,
+                REPOSITORY_NAME: repository.name,
+                REPOSITORY_TOKEN_PARAM_NAME: repoTokenParam.parameterName,
             },
         });
-
-        deployStatusFunction.addToRolePolicy(new PolicyStatement({
-            actions: ['events:PutEvents'],
-            resources: [`arn:aws:events:${Aws.REGION}:${Aws.ACCOUNT_ID}:event-bus/default`],
-            conditions: {
-                StringEquals: {
-                    'events:source': deployStatusEventSourceName,
-                },
-            },
-        }));
+        repoTokenParam.grantRead(deployStatusFunction);
 
         deployProject.onStateChange('OnDeployStateChange', {
             target: new targets.LambdaFunction(deployStatusFunction),
         });
-
-        new Rule(this, 'SendDeployStatusToRepositoryRule', {
-            eventPattern: {
-                source: [deployStatusEventSourceName],
-                detailType: ['CodeBuild Build State Change'],
-            },
-            targets: [
-                new targets.ApiDestination(repositoryApiDestination, {
-                    pathParameterValues: ['$.detail.commit-sha'],
-                    event: this.createStatusEvent(repositoryType),
-                }),
-            ],
-        });
-    }
-
-    private createStatusEvent(repositoryType: FeatureBranchBuildsProps['repository']['host']): RuleTargetInput {
-        switch (repositoryType) {
-        case 'github':
-            return RuleTargetInput.fromObject({
-                'state': EventField.fromPath('$.detail.state'),
-                'target_url': `https://${EventField.fromPath('$.region')}.console.aws.amazon.com/codesuite/codebuild/projects/${EventField.fromPath('$.detail.project-name')}/build/${EventField.fromPath('$.detail.build-id')}`,
-                'context': EventField.fromPath('$.detail.project-name'),
-            });
-        case 'bitbucket':
-            return RuleTargetInput.fromObject({
-                'key': 'AWS-PIPELINE-BUILD',
-                'state': EventField.fromPath('$.detail.state'),
-                'name': EventField.fromPath('$.detail.project-name'),
-                'description': 'Feature branch deployment on AWS CodeBuild',
-                'url': `https://${EventField.fromPath('$.region')}.console.aws.amazon.com/codesuite/codebuild/projects/${EventField.fromPath('$.detail.project-name')}/build/${EventField.fromPath('$.detail.build-id')}`,
-            });
-        default:
-            return assertUnreachable(repositoryType);
-        }
     }
 
     private createBuildFailuresTopic(deployProject: Project): Topic {
