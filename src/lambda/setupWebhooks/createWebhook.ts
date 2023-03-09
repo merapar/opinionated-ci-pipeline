@@ -23,7 +23,7 @@ const createGitHubWebhook = async (repositoryToken: string, repositoryName: stri
     });
 
     if (response.status === 201) {
-        return ((await response.json()) as Record<string, string>).id;
+        return ((await response.json()) as Record<string, number>).id.toString();
     }
 
     throw new Error(`Unable to create GitHub webhook. Status: ${response.status}, response: ${await response.text()}`);
