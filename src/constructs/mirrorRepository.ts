@@ -4,7 +4,7 @@ import {Construct} from 'constructs';
 import {IStringParameter} from 'aws-cdk-lib/aws-ssm';
 import {getProjectName} from '../util/context';
 import {BuildEnvironmentVariableType, BuildSpec, ComputeType, LinuxBuildImage, Project} from 'aws-cdk-lib/aws-codebuild';
-import {CustomResource, Duration, Stack} from 'aws-cdk-lib';
+import {CustomResource, Duration, Fn, Stack} from 'aws-cdk-lib';
 import {CustomNodejsFunction} from './customNodejsFunction';
 import {Code, Function as LambdaFunction, FunctionUrlAuthType} from 'aws-cdk-lib/aws-lambda';
 import * as path from 'path';
@@ -31,7 +31,7 @@ export class MirrorRepository extends Construct {
             triggerMirrorFunctionUrl,
         } = this.createRepositoryMirroring(props.repoTokenParam, props.repository, this.codeCommitRepository);
 
-        const webhook = this.createWebhook(props.repoTokenParam, props.repository, triggerMirrorFunctionUrl.url);
+        const webhook = this.createWebhook(props.repoTokenParam, props.repository, triggerMirrorFunctionUrl);
 
         this.triggerInitialMirror(triggerMirrorFunction, [webhook]);
     }
@@ -78,11 +78,14 @@ export class MirrorRepository extends Construct {
         codeCommit.grantPullPush(mirrorProject);
         repoTokenParam.grantRead(mirrorProject);
 
+        const webhookSecret = Fn.select(2, Fn.split('/', Stack.of(this).stackId));
+
         const triggerMirrorFunction = new CustomNodejsFunction(this, 'TriggerMirrorFunction', {
             code: Code.fromAsset(path.join(__dirname, '..', 'lambda', 'mirrorRepository')),
             timeout: Duration.seconds(30),
             environment: {
                 CODEBUILD_PROJECT_NAME: mirrorProject.projectName,
+                SECRET: webhookSecret,
             },
         });
         triggerMirrorFunction.addToRolePolicy(new PolicyStatement({
@@ -96,7 +99,7 @@ export class MirrorRepository extends Construct {
 
         return {
             triggerMirrorFunction,
-            triggerMirrorFunctionUrl,
+            triggerMirrorFunctionUrl: `${triggerMirrorFunctionUrl.url}?secret=${webhookSecret}`,
         };
     }
 
