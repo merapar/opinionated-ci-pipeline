@@ -6,12 +6,11 @@ import {getProjectName} from '../util/context';
 import {BuildEnvironmentVariableType, BuildSpec, ComputeType, LinuxBuildImage, Project} from 'aws-cdk-lib/aws-codebuild';
 import {CustomResource, Duration, Fn, Stack} from 'aws-cdk-lib';
 import {CustomNodejsFunction} from './customNodejsFunction';
-import {Code, Function as LambdaFunction, FunctionUrlAuthType} from 'aws-cdk-lib/aws-lambda';
+import {Code, FunctionUrlAuthType} from 'aws-cdk-lib/aws-lambda';
 import * as path from 'path';
 import {PolicyStatement} from 'aws-cdk-lib/aws-iam';
-import {Provider} from 'aws-cdk-lib/custom-resources';
+import {AwsCustomResource, AwsCustomResourcePolicy, PhysicalResourceId, Provider} from 'aws-cdk-lib/custom-resources';
 import {RetentionDays} from 'aws-cdk-lib/aws-logs';
-import {Trigger} from 'aws-cdk-lib/triggers';
 
 export interface MirrorRepositoryProps extends Pick<ResolvedApplicationProps, 'repository'> {
     repoTokenParam: IStringParameter;
@@ -27,13 +26,13 @@ export class MirrorRepository extends Construct {
         this.codeCommitRepository = this.createCodeCommitRepository();
 
         const {
-            triggerMirrorFunction,
+            mirrorProject,
             triggerMirrorFunctionUrl,
         } = this.createRepositoryMirroring(props.repoTokenParam, props.repository, this.codeCommitRepository);
 
-        const webhook = this.createWebhook(props.repoTokenParam, props.repository, triggerMirrorFunctionUrl);
+        this.createWebhook(props.repoTokenParam, props.repository, triggerMirrorFunctionUrl);
 
-        this.triggerInitialMirror(triggerMirrorFunction, [webhook]);
+        this.triggerInitialMirror(mirrorProject);
     }
 
     private createCodeCommitRepository() {
@@ -98,7 +97,7 @@ export class MirrorRepository extends Construct {
         });
 
         return {
-            triggerMirrorFunction,
+            mirrorProject,
             triggerMirrorFunctionUrl: `${triggerMirrorFunctionUrl.url}?secret=${webhookSecret}`,
         };
     }
@@ -115,7 +114,7 @@ export class MirrorRepository extends Construct {
             logRetention: RetentionDays.ONE_MONTH,
         });
 
-        return new CustomResource(this, 'Webhook', {
+        new CustomResource(this, 'Webhook', {
             serviceToken: provider.serviceToken,
             properties: {
                 StackName: Stack.of(this).stackName,
@@ -127,11 +126,19 @@ export class MirrorRepository extends Construct {
         });
     }
 
-    private triggerInitialMirror(triggerMirrorRepoFunction: LambdaFunction, executeAfter: Construct[]) {
-        new Trigger(this, 'TriggerInitialMirror', {
-            handler: triggerMirrorRepoFunction,
-            executeAfter,
-            executeOnHandlerChange: false,
+    private triggerInitialMirror(mirrorProject: Project) {
+        new AwsCustomResource(this, 'TriggerInitialMirror', {
+            onCreate: {
+                service: 'CodeBuild',
+                action: 'startBuild',
+                parameters: {
+                    projectName: mirrorProject.projectName,
+                },
+                physicalResourceId: PhysicalResourceId.of('1'),
+            },
+            policy: AwsCustomResourcePolicy.fromSdkCalls({
+                resources: [mirrorProject.projectArn],
+            }),
         });
     }
 }
