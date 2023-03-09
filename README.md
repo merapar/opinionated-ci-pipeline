@@ -23,14 +23,11 @@ Currently supported source repositories are GitHub and Bitbucket.
     - [1. Install](#1-install)
     - [2. Set context parameters](#2-set-context-parameters)
     - [3. Create `CDKApplication`](#3-create-cdkapplication)
-    - [4. Create repository access token secret](#4-create-repository-access-token-secret)
+    - [4. Create repository access token](#4-create-repository-access-token)
         - [GitHub](#github)
         - [Bitbucket](#bitbucket)
     - [5. Bootstrap the CDK](#5-bootstrap-the-cdk)
     - [6. Deploy the CI Stack](#6-deploy-the-ci-stack)
-    - [7. Setup source repository mirroring](#7-setup-source-repository-mirroring)
-        - [GitHub](#github)
-        - [Bitbucket](#bitbucket)
     - [Deploy development environment](#deploy-development-environment)
 - [Parameters](#parameters)
 - [Notifications and alarms](#notifications-and-alarms)
@@ -41,12 +38,11 @@ Currently supported source repositories are GitHub and Bitbucket.
 To set up, you need to complete the following steps:
 
 1. Install the library in your project.
-2. Specify target account and region for deployed environments.
+2. Specify context parameters.
 3. Create `CDKApplication` with build process configuration.
-4. Create repository access token for build status notifications.
+4. Create repository access token.
 5. Bootstrap the CDK on the AWS account(s).
 6. Deploy the CI.
-7. Setup source repository mirroring to CodeCommit.
 
 At the end, you will have CI pipeline in place,
 and be able to deploy your own custom environment from the CLI as well.
@@ -147,39 +143,29 @@ Those feature-branch environments will be destroyed after the branch is removed.
 To allow deployment of multiple environments,
 the Stack(s) name must include the environment name.
 
-### 4. Create repository access token secret
+### 4. Create repository access token
 
 An access to the source repository is required
-to send build status notifications,
-visible in commit status and Pull Requests.
+to fetch code and send build status notifications.
+
+Once access token is created, save it in SSM Parameter Store
+as a `SecureString` under the path `/{projectName}/ci/repositoryAccessToken`.
+
+See instructions below on how to create the token
+for each supported repository host.
 
 #### GitHub
 
 Create [a fine-grained personal access token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token#creating-a-fine-grained-personal-access-token)
-with "commit statuses" read and write access.
-
-Then create a secret in AWS Secrets Manager
-named `/PROJECT_NAME/githubAuthorization` with the generated token:
-
-```json
-{
-  "header": "Bearer xxx"
-}
-```
+with read-only access for `Contents`
+read and write access for `Commit statuses` and `Webhooks`.
 
 #### Bitbucket
 
-Create an access token in Bitbucket repository settings
-with `repository:write` access.
-
-Then create a secret in AWS Secrets Manager
-named `/PROJECT_NAME/bitbucketAuthorization` with the generated token:
-
-```json
-{
-  "header": "Bearer xxx"
-}
-```
+In Bitbucket, go to your repository.
+Open Settings → Access tokens.
+There, create a new Repository Access Token
+with `repository:write` and `webhook` scopes.
 
 ### 5. Bootstrap the CDK
 
@@ -196,75 +182,6 @@ Run:
 
 ```bash
 cdk deploy -c ci=true
-```
-
-### 7. Setup source repository mirroring
-
-Because of [multiple drawbacks](adr/connecting-repositories.md)
-of "native" CodePipeline and CodeBuild integrations with GitHub and Bitbucket,
-the CI builds use CodeCommit as a source.
-You must configure GitHub / Bitbucket to mirror the repository to CodeCommit.
-
-CI stack creates a CodeCommit repository (named the same as the `projectName` context value)
-and IAM user `{PROJECT_NAME}-ci-repository-mirror-user` with access to it.
-
-#### GitHub
-
-1. Create an SSH key pair with `ssh-keygen -t rsa -b 4096` command.
-2. Upload the public key as an SSH key for AWS CodeCommit
-   in the created IAM user security credentials settings.
-3. Create secrets in the GitHub repository settings under
-   "Secrets and variables" -> "Actions":
-    - `CODECOMMIT_SSH_PRIVATE_KEY` - the private key generated in step 1.
-    - `CODECOMMIT_SSH_PRIVATE_KEY_ID` - the SSH key ID of uploaded key from IAM user.
-4. Create `.github/workflows/mirror-repository.yml` file
-   (update the `REGION` and `PROJECT_NAME` in `target_repo_url`):
-
-```yml
-name: Mirror to CodeCommit
-on: [ push, delete ]
-jobs:
-  sync:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-      - uses: pixta-dev/repository-mirroring-action@v1
-        with:
-          target_repo_url: ssh://git-codecommit.REGION.amazonaws.com/v1/repos/PROJECT_NAME
-          ssh_private_key: ${{ secrets.CODECOMMIT_SSH_PRIVATE_KEY }}
-          ssh_username: ${{ secrets.CODECOMMIT_SSH_PRIVATE_KEY_ID }}
-```
-
-#### Bitbucket
-
-1. Create an SSH key pair in the Bitbucket repository Pipeline config.
-2. Upload the public key as an SSH key for AWS CodeCommit
-   in the created IAM user security credentials settings.
-3. Create secrets in the Bitbucket repository Pipeline settings:
-    - `CODECOMMIT_SSH_PRIVATE_KEY` - the private key generated in step 1.
-    - `CODECOMMIT_SSH_PRIVATE_KEY_ID` - the SSH key ID of uploaded key from IAM user.
-4. Put `git-codecommit.REGION.amazonaws.com` in Bitbucket repository SSH Keys Known hosts
-   (update the `REGION`).
-5. Create `bitbucket-pipelines.yml` file (update the `REGION` and `PROJECT_NAME`):
-
-```yml
-image: atlassian/default-image:4
-
-clone:
-  depth: full
-
-pipelines:
-  default:
-    - step:
-        name: Sync to CodeCommit
-        script:
-          - echo "User ${SSH_KEY_ID}" >> ~/.ssh/config
-          # fetch all branches to mirror the whole repository
-          - for remote in `git branch -r | grep -v -- '->' | grep -v -- "${BITBUCKET_BRANCH}"`; do git branch --track ${remote#origin/} $remote; done
-          # mirror repository; it will remove deleted branches as well
-          - git push --mirror ssh://git-codecommit.REGION.amazonaws.com/v1/repos/REPOSITORY-NAME
 ```
 
 ### Deploy development environment
