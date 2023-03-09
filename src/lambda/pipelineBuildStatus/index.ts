@@ -30,7 +30,7 @@ export const handler: CodePipelineCloudWatchPipelineHandler = async (event) => {
         pipelineExecutionId,
     }));
 
-    const commitSha = execution.pipelineExecution?.artifactRevisions?.[0].revisionId;
+    const commitSha = execution.pipelineExecution?.artifactRevisions?.[0]?.revisionId;
     if (!commitSha) {
         logger.warn('Commit hash not found', {execution});
         return;
