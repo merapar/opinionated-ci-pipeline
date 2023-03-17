@@ -31,6 +31,9 @@ Currently supported source repositories are GitHub and Bitbucket.
     - [Deploy development environment](#deploy-development-environment)
 - [Parameters](#parameters)
 - [Notifications and alarms](#notifications-and-alarms)
+- [How to](#how-to)
+    - [Run unit tests during build](#run-unit-tests-during-build)
+    - [Enable Docker](#enable-docker)
 - [Library development](#library-development)
 
 ## Usage
@@ -217,14 +220,28 @@ The same Stacks will be deployed with main pipeline, feature-branch builds, and 
         <td>
 Package manager used in the repository.
 <br/>
-If provided, the install commands will be set to install dependencies using given package manager.
-        </td>
+
+If provided, the `install` command will be set to install dependencies using given package manager.
+
+</td>
     </tr>
     <tr>
         <td>commands</td>
         <td>object</td>
         <td>
+
 Commands executed to build and deploy the application.
+<br/>
+The following commands are set by default:
+
+- `install`
+- `synthPipeline`
+- `deployEnvironment`
+- `destroyEnvironment`
+
+If you override the `install` command,
+either install the `aws-cdk@2` globally
+or modify the other 3 commands to use the local `cdk` binary.
 <br/>
 Commands executed on particular builds:
 
@@ -312,6 +329,37 @@ It's ARN is provided:
 
 - SSM: `/{projectName}/ci/slackAlarmsTopicArn`
 - Stack exported output: `{projectName}-ci-slackAlarmsTopicArn`
+
+## How to
+
+### Run unit tests during build
+
+Set commands in the `commands.buildAndTest`:
+
+```ts
+{
+    commands: {
+        buildAndTest: [
+            'npm run lint',
+            'npm run test',
+        ]
+    }
+}
+```
+
+### Enable Docker
+
+Set `codeBuild.buildEnvironment.privileged` to `true`:
+
+```ts
+{
+    codeBuild: {
+        buildEnvironment: {
+            privileged: true
+        }
+    }
+}
+```
 
 ## Library development
 
