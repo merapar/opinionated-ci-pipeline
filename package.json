@@ -67,7 +67,7 @@
       "@commitlint/config-conventional"
     ]
   },
-  "stability": "experimental",
+  "stability": "stable",
   "types": "lib/index.d.ts",
   "main": "lib/index.js",
   "jsii": {
