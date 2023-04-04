@@ -55,6 +55,10 @@ export class FeatureBranchBuilds extends Construct {
             source,
             timeout: codeBuild.timeout,
             environment: codeBuild.buildEnvironment,
+            vpc: codeBuild.vpc,
+            securityGroups: codeBuild.securityGroups,
+            subnetSelection: codeBuild.subnetSelection,
+            cache: codeBuild.cache,
             buildSpec: BuildSpec.fromObject({
                 version: '0.2',
                 phases: {
@@ -75,6 +79,7 @@ export class FeatureBranchBuilds extends Construct {
             }),
         });
 
+        codeBuild.rolePolicy?.forEach(policy => deployProject.addToRolePolicy(policy));
         this.grantAssumeCDKRoles(deployProject);
 
         repository.onCommit('OnBranchCommit', this.createProjectTriggerOptions(deployProject, defaultBranch, true));
@@ -124,6 +129,10 @@ export class FeatureBranchBuilds extends Construct {
             source,
             timeout: codeBuild.timeout,
             environment: codeBuild.buildEnvironment,
+            vpc: codeBuild.vpc,
+            securityGroups: codeBuild.securityGroups,
+            subnetSelection: codeBuild.subnetSelection,
+            cache: codeBuild.cache,
             buildSpec: BuildSpec.fromObject({
                 version: '0.2',
                 phases: {
@@ -143,6 +152,7 @@ export class FeatureBranchBuilds extends Construct {
             }),
         });
 
+        codeBuild.rolePolicy?.forEach(policy => destroyProject.addToRolePolicy(policy));
         this.grantAssumeCDKRoles(destroyProject);
 
         repository.onReferenceDeleted('OnBranchRemoval', this.createProjectTriggerOptions(destroyProject, defaultBranch));
