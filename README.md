@@ -5,7 +5,7 @@
 
 CI/CD utilizing [CDK Pipelines](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.pipelines-readme.html).
 
-See the [announcement blog post](https://merapar.com/finally-the-cdk-ci-pipeline-that-serverless-deserves/) for examples and architecture diagrams.
+See the [announcement blog post](https://articles.merapar.com/finally-the-cdk-ci-pipeline-that-serverless-deserves) for examples and architecture diagrams.
 
 Features:
 
