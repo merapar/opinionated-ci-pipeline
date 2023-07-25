@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.1.0-beta.1](https://github.com/merapar/opinionated-ci-pipeline/compare/v1.1.0-beta.0...v1.1.0-beta.1) (2023-07-25)
+
+
+### Bug Fixes
+
+* use CodeStar Notifications for proper Slack notifications ([9e7b08a](https://github.com/merapar/opinionated-ci-pipeline/commit/9e7b08a11fc472093436633f070402c29b614078))
+
 ## [1.1.0-beta.0](https://github.com/merapar/opinionated-ci-pipeline/compare/v1.0.0...v1.1.0-beta.0) (2023-04-04)
 
 
