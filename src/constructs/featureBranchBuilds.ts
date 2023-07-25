@@ -109,10 +109,7 @@ export class FeatureBranchBuilds extends Construct {
             notificationName: 'featureBranchBuildFailures',
         });
 
-        // for better visibility, use EventBridge Rules instead of CodeStar Notifications that are generated with project.notifyOnBuildFailed()
-        deployProject.onBuildFailed('OnFeatureBuildFailure', {
-            target: new targets.SnsTopic(failuresTopic.topic),
-        });
+        deployProject.notifyOnBuildFailed('NotifyOnFeatureBuildFailure', failuresTopic.topic);
 
         return failuresTopic.topic;
     }

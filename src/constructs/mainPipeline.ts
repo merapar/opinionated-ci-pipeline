@@ -14,6 +14,7 @@ import {PolicyStatement} from 'aws-cdk-lib/aws-iam';
 import {Code} from 'aws-cdk-lib/aws-lambda';
 import {Topic} from 'aws-cdk-lib/aws-sns';
 import {IStringParameter} from 'aws-cdk-lib/aws-ssm';
+import {PipelineNotificationEvents} from 'aws-cdk-lib/aws-codepipeline';
 
 export interface MainPipelineProps extends Pick<ResolvedApplicationProps,
     'stacks' | 'repository' | 'commands' |
@@ -135,15 +136,13 @@ export class MainPipeline extends Construct {
             notificationName: 'pipelineFailures',
         });
 
-        // for better visibility, use EventBridge Rules instead of CodeStar Notifications that are generated with pipeline.notifyOn()
-        pipeline.pipeline.onStateChange('OnPipelineFailure', {
-            eventPattern: {
-                detail: {
-                    state: ['FAILED'],
-                },
+        pipeline.pipeline.notifyOn(
+            'NotifyOnPipelineFailure',
+            failuresTopic.topic,
+            {
+                events: [PipelineNotificationEvents.PIPELINE_EXECUTION_FAILED],
             },
-            target: new targets.SnsTopic(failuresTopic.topic),
-        });
+        );
 
         return failuresTopic.topic;
     }
