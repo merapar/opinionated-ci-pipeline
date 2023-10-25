@@ -15,3 +15,5 @@ await esbuild.build({
     packages: 'external',
     outdir: 'lib/lambda',
 });
+
+fs.cpSync('src/lambda/mirrorRepository', 'lib/lambda/mirrorRepository', {recursive: true});
