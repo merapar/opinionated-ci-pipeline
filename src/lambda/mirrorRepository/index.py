@@ -14,7 +14,7 @@ sourceRepoToken = boto3.client('ssm').get_parameter(
 )["Parameter"]["Value"]
 
 def handler(event, context):
-    if (event.queryStringParameters is None or event.queryStringParameters.get("secret") != secret):
+    if (event.get("queryStringParameters") is None or event.get("queryStringParameters").get("secret") != secret):
         print("Invalid secret")
         return {
             "statusCode": 401,
