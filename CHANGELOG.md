@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.0.0-beta.0](https://github.com/merapar/opinionated-ci-pipeline/compare/v1.1.0...v2.0.0-beta.0) (2023-10-25)
+
+
+### ⚠ BREAKING CHANGES
+
+* use Standard 7.0 as default build image
+
+### Features
+
+* use Standard 7.0 as default build image ([4cba689](https://github.com/merapar/opinionated-ci-pipeline/commit/4cba689c0143a9939791ebb125d60b6d09a8aef6))
+
 ## [1.1.0](https://github.com/merapar/opinionated-ci-pipeline/compare/v1.1.0-beta.1...v1.1.0) (2023-07-25)
 
 ## [1.1.0-beta.1](https://github.com/merapar/opinionated-ci-pipeline/compare/v1.1.0-beta.0...v1.1.0-beta.1) (2023-07-25)
