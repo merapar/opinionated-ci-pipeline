@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.0.0-beta.2](https://github.com/merapar/opinionated-ci-pipeline/compare/v2.0.0-beta.1...v2.0.0-beta.2) (2023-10-25)
+
+
+### Bug Fixes
+
+* retrieve secret from query string parameters ([8cf96ca](https://github.com/merapar/opinionated-ci-pipeline/commit/8cf96ca1169893bf36190dafe8c1bdc6a9ae91ff))
+
 ## [2.0.0-beta.1](https://github.com/merapar/opinionated-ci-pipeline/compare/v2.0.0-beta.0...v2.0.0-beta.1) (2023-10-25)
 
 
