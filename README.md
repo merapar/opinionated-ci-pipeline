@@ -387,3 +387,8 @@ cd example
 pnpm install
 pnpm cdk deploy -c ci=true
 ```
+
+## Mentions
+
+Git repository push to CodeCommit inside Lambda function
+based on https://msimpson.co.nz/Github-CodeCommit/

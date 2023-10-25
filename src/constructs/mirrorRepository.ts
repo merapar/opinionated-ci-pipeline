@@ -3,14 +3,13 @@ import {Repository} from 'aws-cdk-lib/aws-codecommit';
 import {Construct} from 'constructs';
 import {IStringParameter} from 'aws-cdk-lib/aws-ssm';
 import {getProjectName} from '../util/context';
-import {BuildEnvironmentVariableType, BuildSpec, ComputeType, LinuxBuildImage, Project} from 'aws-cdk-lib/aws-codebuild';
 import {CustomResource, Duration, Fn, Stack} from 'aws-cdk-lib';
 import {CustomNodejsFunction} from './customNodejsFunction';
-import {Code, FunctionUrlAuthType} from 'aws-cdk-lib/aws-lambda';
+import {Code, Function as LambdaFunction, FunctionUrlAuthType, LayerVersion, Runtime} from 'aws-cdk-lib/aws-lambda';
 import * as path from 'path';
-import {PolicyStatement} from 'aws-cdk-lib/aws-iam';
 import {AwsCustomResource, AwsCustomResourcePolicy, PhysicalResourceId, Provider} from 'aws-cdk-lib/custom-resources';
 import {RetentionDays} from 'aws-cdk-lib/aws-logs';
+import {AwsCliLayer} from 'aws-cdk-lib/lambda-layer-awscli';
 
 export interface MirrorRepositoryProps extends Pick<ResolvedApplicationProps, 'repository'> {
     repoTokenParam: IStringParameter;
@@ -23,16 +22,18 @@ export class MirrorRepository extends Construct {
     constructor(scope: Construct, id: string, props: MirrorRepositoryProps) {
         super(scope, id);
 
+        const webhookSecret = Fn.select(2, Fn.split('/', Stack.of(this).stackId));
+
         this.codeCommitRepository = this.createCodeCommitRepository();
 
         const {
-            mirrorProject,
+            mirrorFunction,
             triggerMirrorFunctionUrl,
-        } = this.createRepositoryMirroring(props.repoTokenParam, props.repository, this.codeCommitRepository);
+        } = this.createRepositoryMirroring(webhookSecret, props.repoTokenParam, props.repository, this.codeCommitRepository);
 
         this.createWebhook(props.repoTokenParam, props.repository, triggerMirrorFunctionUrl);
 
-        this.triggerInitialMirror(mirrorProject);
+        this.triggerInitialMirror(mirrorFunction, webhookSecret);
     }
 
     private createCodeCommitRepository() {
@@ -41,63 +42,39 @@ export class MirrorRepository extends Construct {
         });
     }
 
-    private createRepositoryMirroring(repoTokenParam: IStringParameter, repository: ApplicationProps['repository'], codeCommit: Repository) {
+    private createRepositoryMirroring(webhookSecret: string, repoTokenParam: IStringParameter, repository: ApplicationProps['repository'], codeCommit: Repository) {
         const sourceRepositoryDomain = repository.host === 'github' ? 'github.com' : 'bitbucket.org';
-        const mirrorProject = new Project(this, 'RepositoryMirrorProject', {
-            projectName: `${Stack.of(this).stackName}-mirrorRepository`,
-            timeout: Duration.minutes(20),
-            environment: {
-                buildImage: LinuxBuildImage.STANDARD_6_0,
-                computeType: ComputeType.SMALL,
-            },
-            environmentVariables: {
-                REPO_TOKEN: {
-                    type: BuildEnvironmentVariableType.PARAMETER_STORE,
-                    value: repoTokenParam.parameterName,
-                },
-            },
-            buildSpec: BuildSpec.fromObject({
-                version: '0.2',
-                phases: {
-                    install: {
-                        commands: [
-                            'pip install git-remote-codecommit',
-                        ],
-                    },
-                    build: {
-                        commands: [
-                            `git clone --mirror https://x-token-auth:$REPO_TOKEN@${sourceRepositoryDomain}/${repository.name}.git repository`,
-                            'cd repository',
-                            `git push --mirror ${codeCommit.repositoryCloneUrlGrc}`,
-                        ],
-                    },
-                },
-            }),
-        });
-        codeCommit.grantPullPush(mirrorProject);
-        repoTokenParam.grantRead(mirrorProject);
 
-        const webhookSecret = Fn.select(2, Fn.split('/', Stack.of(this).stackId));
-
-        const triggerMirrorFunction = new CustomNodejsFunction(this, 'TriggerMirrorFunction', {
+        const mirrorFunction = new LambdaFunction(this, 'RepositoryMirroring', {
+            runtime: Runtime.PYTHON_3_11, // AwsCliLayer requires Python function
             code: Code.fromAsset(path.join(__dirname, '..', 'lambda', 'mirrorRepository')),
-            timeout: Duration.seconds(30),
+            handler: 'index.handler',
+            timeout: Duration.minutes(3),
+            memorySize: 2048,
             environment: {
-                CODEBUILD_PROJECT_NAME: mirrorProject.projectName,
+                HOME: '/var/task',
                 SECRET: webhookSecret,
+                CODECOMMIT_REPO_URL: codeCommit.repositoryCloneUrlHttp,
+                SOURCE_REPO_DOMAIN: sourceRepositoryDomain,
+                SOURCE_REPO_NAME: repository.name,
+                SOURCE_REPO_TOKEN_PARAM: repoTokenParam.parameterName,
             },
         });
-        triggerMirrorFunction.addToRolePolicy(new PolicyStatement({
-            actions: ['codebuild:StartBuild'],
-            resources: [mirrorProject.projectArn],
-        }));
 
-        const triggerMirrorFunctionUrl = triggerMirrorFunction.addFunctionUrl({
+        mirrorFunction.addLayers(
+            new AwsCliLayer(this, 'AwsCliLayer'),
+            LayerVersion.fromLayerVersionArn(this, 'GitLayer', `arn:aws:lambda:${Stack.of(this).region}:553035198032:layer:git-lambda2:8`),
+        );
+
+        codeCommit.grantPullPush(mirrorFunction);
+        repoTokenParam.grantRead(mirrorFunction);
+
+        const triggerMirrorFunctionUrl = mirrorFunction.addFunctionUrl({
             authType: FunctionUrlAuthType.NONE,
         });
 
         return {
-            mirrorProject,
+            mirrorFunction,
             triggerMirrorFunctionUrl: `${triggerMirrorFunctionUrl.url}?secret=${webhookSecret}`,
         };
     }
@@ -126,18 +103,24 @@ export class MirrorRepository extends Construct {
         });
     }
 
-    private triggerInitialMirror(mirrorProject: Project) {
+    private triggerInitialMirror(mirrorFunction: LambdaFunction, secret: string) {
         new AwsCustomResource(this, 'TriggerInitialMirror', {
             onCreate: {
-                service: 'CodeBuild',
-                action: 'startBuild',
+                service: 'Lambda',
+                action: 'invoke',
                 parameters: {
-                    projectName: mirrorProject.projectName,
+                    invocationType: 'Event',
+                    functionName: mirrorFunction.functionName,
+                    payload: JSON.stringify({
+                        queryStringParameters: {
+                            secret,
+                        },
+                    }),
                 },
                 physicalResourceId: PhysicalResourceId.of('1'),
             },
             policy: AwsCustomResourcePolicy.fromSdkCalls({
-                resources: [mirrorProject.projectArn],
+                resources: [mirrorFunction.functionArn],
             }),
         });
     }

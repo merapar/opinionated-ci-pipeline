@@ -1,0 +1,3 @@
+[credential]
+    helper = !/opt/awscli/aws codecommit credential-helper $@
+    UseHttpPath = true

@@ -29,7 +29,7 @@
     "lodash": "^4.17.21"
   },
   "peerDependencies": {
-    "aws-cdk-lib": "^2.76.0",
+    "aws-cdk-lib": "^2.88.0",
     "constructs": "^10.0.0"
   },
   "devDependencies": {
@@ -44,7 +44,7 @@
     "@types/node": "18.11.18",
     "@typescript-eslint/eslint-plugin": "5.53.0",
     "@typescript-eslint/parser": "5.53.0",
-    "aws-cdk-lib": "2.76.0",
+    "aws-cdk-lib": "2.88.0",
     "constructs": "10.0.0",
     "esbuild": "0.17.11",
     "eslint": "8.34.0",
