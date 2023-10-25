@@ -218,7 +218,7 @@ export const defaultProps = {
         timeout: Duration.minutes(30),
         buildEnvironment: {
             computeType: ComputeType.MEDIUM,
-            buildImage: LinuxBuildImage.STANDARD_6_0,
+            buildImage: LinuxBuildImage.STANDARD_7_0,
         },
     },
     slackNotifications: {
