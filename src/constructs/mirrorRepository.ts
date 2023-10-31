@@ -10,6 +10,7 @@ import * as path from 'path';
 import {AwsCustomResource, AwsCustomResourcePolicy, PhysicalResourceId, Provider} from 'aws-cdk-lib/custom-resources';
 import {RetentionDays} from 'aws-cdk-lib/aws-logs';
 import {AwsCliLayer} from 'aws-cdk-lib/lambda-layer-awscli';
+import {PolicyStatement} from 'aws-cdk-lib/aws-iam';
 
 export interface MirrorRepositoryProps extends Pick<ResolvedApplicationProps, 'repository'> {
     repoTokenParam: IStringParameter;
@@ -109,9 +110,9 @@ export class MirrorRepository extends Construct {
                 service: 'Lambda',
                 action: 'invoke',
                 parameters: {
-                    invocationType: 'Event',
-                    functionName: mirrorFunction.functionName,
-                    payload: JSON.stringify({
+                    InvocationType: 'Event',
+                    FunctionName: mirrorFunction.functionName,
+                    Payload: JSON.stringify({
                         queryStringParameters: {
                             secret,
                         },
@@ -119,9 +120,12 @@ export class MirrorRepository extends Construct {
                 },
                 physicalResourceId: PhysicalResourceId.of('1'),
             },
-            policy: AwsCustomResourcePolicy.fromSdkCalls({
-                resources: [mirrorFunction.functionArn],
-            }),
+            policy: AwsCustomResourcePolicy.fromStatements([
+                new PolicyStatement({
+                    actions: ['lambda:InvokeFunction'],
+                    resources: [mirrorFunction.functionArn],
+                }),
+            ]),
         });
     }
 }
