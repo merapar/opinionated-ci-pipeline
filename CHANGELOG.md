@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.0.1](https://github.com/merapar/opinionated-ci-pipeline/compare/v2.0.0...v2.0.1) (2023-10-31)
+
+
+### Bug Fixes
+
+* initial mirror trigger params on CI create ([1377fdf](https://github.com/merapar/opinionated-ci-pipeline/commit/1377fdf21f2ea675c975f90b23b4c29aaf1db1a3))
+* unique CodeStar notification rule names ([091e30f](https://github.com/merapar/opinionated-ci-pipeline/commit/091e30f881752aa2fcb99b5c87c6513991c7f00f))
+
 ## [2.0.0](https://github.com/merapar/opinionated-ci-pipeline/compare/v2.0.0-beta.2...v2.0.0) (2023-10-25)
 
 ### ⚠ BREAKING CHANGES
