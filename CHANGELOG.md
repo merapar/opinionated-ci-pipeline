@@ -4,23 +4,6 @@ All notable changes to this project will be documented in this file. See [standa
 
 ## [2.0.0](https://github.com/merapar/opinionated-ci-pipeline/compare/v2.0.0-beta.2...v2.0.0) (2023-10-25)
 
-## [2.0.0-beta.2](https://github.com/merapar/opinionated-ci-pipeline/compare/v2.0.0-beta.1...v2.0.0-beta.2) (2023-10-25)
-
-
-### Bug Fixes
-
-* retrieve secret from query string parameters ([8cf96ca](https://github.com/merapar/opinionated-ci-pipeline/commit/8cf96ca1169893bf36190dafe8c1bdc6a9ae91ff))
-
-## [2.0.0-beta.1](https://github.com/merapar/opinionated-ci-pipeline/compare/v2.0.0-beta.0...v2.0.0-beta.1) (2023-10-25)
-
-
-### Bug Fixes
-
-* add mirror repository Lambda sources to bundle ([0d3aaf7](https://github.com/merapar/opinionated-ci-pipeline/commit/0d3aaf72fd749f7541964b00a3f92090f369e373))
-
-## [2.0.0-beta.0](https://github.com/merapar/opinionated-ci-pipeline/compare/v1.1.0...v2.0.0-beta.0) (2023-10-25)
-
-
 ### ⚠ BREAKING CHANGES
 
 * use Standard 7.0 as default build image
@@ -28,6 +11,7 @@ All notable changes to this project will be documented in this file. See [standa
 ### Features
 
 * use Standard 7.0 as default build image ([4cba689](https://github.com/merapar/opinionated-ci-pipeline/commit/4cba689c0143a9939791ebb125d60b6d09a8aef6))
+* replace CodeBuild with Lambda for repository mirroring ([1356115](https://github.com/merapar/opinionated-ci-pipeline/commit/1356115764c4741581e8cc0207d338fb83826eb6))
 
 ## [1.1.0](https://github.com/merapar/opinionated-ci-pipeline/compare/v1.1.0-beta.1...v1.1.0) (2023-07-25)
 
