@@ -141,6 +141,7 @@ export class MainPipeline extends Construct {
             failuresTopic.topic,
             {
                 events: [PipelineNotificationEvents.PIPELINE_EXECUTION_FAILED],
+                notificationRuleName: `${Stack.of(this).stackName}-pipelineFailure`, // ensure unique name
             },
         );
 

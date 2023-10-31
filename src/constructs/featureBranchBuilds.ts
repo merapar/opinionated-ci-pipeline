@@ -109,7 +109,9 @@ export class FeatureBranchBuilds extends Construct {
             notificationName: 'featureBranchBuildFailures',
         });
 
-        deployProject.notifyOnBuildFailed('NotifyOnFeatureBuildFailure', failuresTopic.topic);
+        deployProject.notifyOnBuildFailed('NotifyOnFeatureBuildFailure', failuresTopic.topic, {
+            notificationRuleName: `${Stack.of(this).stackName}-featureBuildFailure`, // ensure unique name
+        });
 
         return failuresTopic.topic;
     }
