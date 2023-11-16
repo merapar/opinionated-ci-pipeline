@@ -1,4 +1,5 @@
 import {bitbucketApiCall, githubApiCall} from './api';
+import {createHash} from 'crypto';
 
 export const sendCommitStatus = async (
     repositoryHost: string, repositoryName: string, token: string,
@@ -33,7 +34,8 @@ const sendBitbucketCommitStatus = async (
     status: string, commitSha: string, buildName: string, buildUrl: string, description: string,
 ) => {
     const response = await bitbucketApiCall(token, `repositories/${repositoryName}/commit/${commitSha}/statuses/build`, 'POST', {
-        key: 'AWS-PIPELINE-BUILD',
+    // hash function used, because build status key must be shorter than 40 characters
+        key: createHash('md5').update(buildName).digest('hex'),
         state: status,
         name: buildName,
         description: description,
