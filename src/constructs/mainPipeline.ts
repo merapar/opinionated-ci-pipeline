@@ -1,7 +1,13 @@
 import {Repository} from 'aws-cdk-lib/aws-codecommit';
 import * as targets from 'aws-cdk-lib/aws-events-targets';
 import {Construct} from 'constructs';
-import {ApplicationProps, EnvironmentDeployment, IStacksCreation, ResolvedApplicationProps, WaveDeployment} from '../applicationProps';
+import {
+    ApplicationProps,
+    EnvironmentDeployment,
+    IStacksCreation,
+    ResolvedApplicationProps,
+    WaveDeployment,
+} from '../applicationProps';
 import {CustomNodejsFunction} from './customNodejsFunction';
 import * as path from 'path';
 import {NotificationsTopic} from './notificationsTopic';
@@ -15,6 +21,7 @@ import {Code} from 'aws-cdk-lib/aws-lambda';
 import {Topic} from 'aws-cdk-lib/aws-sns';
 import {IStringParameter} from 'aws-cdk-lib/aws-ssm';
 import {PipelineNotificationEvents} from 'aws-cdk-lib/aws-codepipeline';
+import {capitalizeFirstLetter} from '../util/string';
 
 export interface MainPipelineProps extends Pick<ResolvedApplicationProps,
     'stacks' | 'repository' | 'commands' |
@@ -178,4 +185,3 @@ export class MainPipeline extends Construct {
     }
 }
 
-const capitalizeFirstLetter = (str: string): string => str.charAt(0).toUpperCase() + str.slice(1);
