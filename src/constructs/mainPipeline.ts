@@ -1,11 +1,24 @@
 import {Repository} from 'aws-cdk-lib/aws-codecommit';
 import * as targets from 'aws-cdk-lib/aws-events-targets';
 import {Construct} from 'constructs';
-import {ApplicationProps, EnvironmentDeployment, IStacksCreation, ResolvedApplicationProps, WaveDeployment} from '../applicationProps';
+import {
+    ApplicationProps,
+    EnvironmentDeployment,
+    IStacksCreation,
+    ResolvedApplicationProps,
+    WaveDeployment,
+} from '../applicationProps';
 import {CustomNodejsFunction} from './customNodejsFunction';
 import * as path from 'path';
 import {NotificationsTopic} from './notificationsTopic';
-import {CodePipeline, CodePipelineProps, CodePipelineSource, ShellStep, Wave} from 'aws-cdk-lib/pipelines';
+import {
+    CodePipeline,
+    CodePipelineProps,
+    CodePipelineSource,
+    ManualApprovalStep,
+    ShellStep,
+    Wave,
+} from 'aws-cdk-lib/pipelines';
 import {merge} from 'lodash';
 import {getEnvironmentConfig, getProjectName} from '../util/context';
 import {Aws, Stack} from 'aws-cdk-lib';
@@ -109,6 +122,14 @@ export class MainPipeline extends Construct {
             env: getEnvironmentConfig(this, step.environment),
             stacks,
         }));
+
+        if (step.manualApproval) {
+            stage.addPre(
+                new ManualApprovalStep(
+                    `${idPrefix}${capitalizeFirstLetter(step.environment)}ManualApproval`,
+                ),
+            );
+        }
 
         if (step.pre && step.pre.length > 0) {
             stage.addPre(new ShellStep(`${idPrefix}PreEnv${capitalizeFirstLetter(step.environment)}`, {

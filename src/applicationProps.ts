@@ -156,6 +156,11 @@ export interface EnvironmentDeployment {
     readonly environment: string;
 
     /**
+     * Flag indicating whether environment deployment requires manual approval.
+     */
+    readonly manualApproval?: boolean;
+
+    /**
      * Commands to execute before the environment deployment.
      */
     readonly pre?: string[];
