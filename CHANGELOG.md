@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.0.0-beta.0](https://github.com/merapar/opinionated-ci-pipeline/compare/v2.1.0-beta.0...v3.0.0-beta.0) (2024-02-27)
+
+
+### ⚠ BREAKING CHANGES
+
+* bump version to 3.x due to braking changes in afd68f5
+
+* bump version to 3.x due to braking changes in afd68f5 ([432074e](https://github.com/merapar/opinionated-ci-pipeline/commit/432074e25488eb4e1f4eebe01650822d3674a8a4))
+
 ## [2.1.0-beta.0](https://github.com/merapar/opinionated-ci-pipeline/compare/v2.0.1...v2.1.0-beta.0) (2024-02-27)
 
 
