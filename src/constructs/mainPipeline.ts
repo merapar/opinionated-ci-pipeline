@@ -28,6 +28,7 @@ import {Code} from 'aws-cdk-lib/aws-lambda';
 import {Topic} from 'aws-cdk-lib/aws-sns';
 import {IStringParameter} from 'aws-cdk-lib/aws-ssm';
 import {PipelineNotificationEvents} from 'aws-cdk-lib/aws-codepipeline';
+import {capitalizeFirstLetter} from '../util/string';
 
 export interface MainPipelineProps extends Pick<ResolvedApplicationProps,
     'stacks' | 'repository' | 'commands' |
@@ -199,4 +200,3 @@ export class MainPipeline extends Construct {
     }
 }
 
-const capitalizeFirstLetter = (str: string): string => str.charAt(0).toUpperCase() + str.slice(1);

@@ -4,14 +4,20 @@ import {cloneDeep, defaultsDeep, merge} from 'lodash';
 import {ManagedPolicy} from 'aws-cdk-lib/aws-iam';
 import {FeatureBranchBuilds} from './constructs/featureBranchBuilds';
 import {MainPipeline} from './constructs/mainPipeline';
-import {notEmpty} from './util/types';
-import {ApplicationProps, defaultProps, ResolvedApplicationProps} from './applicationProps';
+import {
+    ApplicationProps,
+    defaultProps,
+    ResolvedApplicationProps,
+    SlackChannelConfig,
+    SlackNotifications,
+} from './applicationProps';
 import {SlackChannelConfiguration} from 'aws-cdk-lib/aws-chatbot';
-import {Topic} from 'aws-cdk-lib/aws-sns';
+import {ITopic, Topic} from 'aws-cdk-lib/aws-sns';
 import {NotificationsTopic} from './constructs/notificationsTopic';
 import {getProjectName} from './util/context';
 import {StringParameter} from 'aws-cdk-lib/aws-ssm';
 import {MirrorRepository} from './constructs/mirrorRepository';
+import {capitalizeFirstLetter} from './util/string';
 
 const defaultCommands: { [key in NonNullable<ApplicationProps['packageManager']>]: Exclude<ApplicationProps['commands'], undefined> } = {
     npm: {
@@ -59,7 +65,7 @@ export class CIStack extends Stack {
             repositoryTokenParam,
         });
 
-        if (resolvedProps.slackNotifications.workspaceId && resolvedProps.slackNotifications.channelId) {
+        if (resolvedProps.slackNotifications) {
             this.createSlackNotifications(projectName, resolvedProps.slackNotifications, mainPipeline.failuresTopic, featureBranchBuilds.failuresTopic);
         }
     }
@@ -73,24 +79,35 @@ export class CIStack extends Stack {
     }
 
     private createSlackNotifications(
-        projectName: string, config: ResolvedApplicationProps['slackNotifications'],
+        projectName: string, slackNotificationsConfig: SlackNotifications,
         mainPipelineFailuresTopic: Topic, featureBranchFailuresTopic: Topic,
     ) {
-        const alarmsTopic = new NotificationsTopic(this, 'SlackAlarmsTopic', {
-            projectName: projectName,
-            notificationName: 'slackAlarms',
-        });
+        const {mainPipelineFailures, featureBranchFailures} = slackNotificationsConfig;
 
-        const slack = new SlackChannelConfiguration(this, 'SlackChannelConfiguration', {
-            slackChannelConfigurationName: this.stackName,
+        if (mainPipelineFailures) {
+            const alarmsTopic = new NotificationsTopic(this, 'SlackAlarmsTopic', {
+                projectName: projectName,
+                notificationName: 'slackAlarms',
+            });
+            this.createSlackChannelConfiguration('main', mainPipelineFailures, [alarmsTopic.topic, mainPipelineFailuresTopic]);
+        }
+
+        if (featureBranchFailures) {
+            this.createSlackChannelConfiguration('feature', featureBranchFailures, [featureBranchFailuresTopic]);
+        }
+    }
+
+    private createSlackChannelConfiguration(name: string, config: SlackChannelConfig, topics: ITopic[]): SlackChannelConfiguration {
+        const lowercasedName = name.toLowerCase();
+        const slackChannelConfiguration = new SlackChannelConfiguration(this, `${capitalizeFirstLetter(lowercasedName)}SlackChannelConfiguration`, {
+            slackChannelConfigurationName: `${this.stackName}-${lowercasedName}`,
             slackWorkspaceId: config.workspaceId,
             slackChannelId: config.channelId,
-            notificationTopics: [
-                alarmsTopic.topic,
-                config.mainPipelineFailures ? mainPipelineFailuresTopic : undefined,
-                config.featureBranchFailures ? featureBranchFailuresTopic : undefined,
-            ].filter(notEmpty),
+            notificationTopics: topics,
         });
-        slack.role?.addManagedPolicy(ManagedPolicy.fromAwsManagedPolicyName('CloudWatchReadOnlyAccess'));
+        slackChannelConfiguration.role?.addManagedPolicy(
+            ManagedPolicy.fromAwsManagedPolicyName('CloudWatchReadOnlyAccess'),
+        );
+        return slackChannelConfiguration;
     }
 }

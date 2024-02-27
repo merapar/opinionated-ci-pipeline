@@ -192,21 +192,22 @@ export interface CodePipelineOverrides {
     readonly enableKeyRotation?: boolean;
 }
 
-export interface SlackNotifications {
+export interface SlackChannelConfig {
     readonly workspaceId: string;
     readonly channelId: string;
+}
 
+export interface SlackNotifications {
     /**
-     * Whether to notify about main pipeline failures.
-     * @default true
+     * Slack notifications configuration for main pipeline failures.
+     * @default Slack notifications are not being sent
      */
-    readonly mainPipelineFailures?: boolean;
-
+    readonly mainPipelineFailures?: SlackChannelConfig;
     /**
-     * Whether to notify about feature branch deployment failures.
-     * @default false
+     * Slack notifications configuration for feature branch deployment failures.
+     * @default Slack notifications are not being sent
      */
-    readonly featureBranchFailures?: boolean;
+    readonly featureBranchFailures?: SlackChannelConfig;
 }
 
 export const defaultProps = {
@@ -225,9 +226,6 @@ export const defaultProps = {
             computeType: ComputeType.MEDIUM,
             buildImage: LinuxBuildImage.STANDARD_7_0,
         },
-    },
-    slackNotifications: {
-        mainPipelineFailures: true,
     },
 }; // "satisfies PartialDeep<CIStackProps>" would be great here if jsii supported TypeScript 4.9 (PartialDeep from type-fest lib)
 
