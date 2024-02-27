@@ -17,7 +17,7 @@ export class CDKApplication extends App {
 
         if (ci && ci.toLowerCase() === 'true') {
             const environment = getEnvironmentConfig(this, 'ci');
-            new CIStack(this, 'CI', {
+            new CIStack(this, `${projectName}CI`, {
                 stackName: `${projectName}-ci`,
                 env: environment,
                 ...props,
