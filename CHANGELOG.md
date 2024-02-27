@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.1.0-beta.0](https://github.com/merapar/opinionated-ci-pipeline/compare/v2.0.1...v2.1.0-beta.0) (2024-02-27)
+
+
+### Features
+
+* add possibility to enable manual approval before deploying on environment. Solves issue [#5](https://github.com/merapar/opinionated-ci-pipeline/issues/5) ([73b895f](https://github.com/merapar/opinionated-ci-pipeline/commit/73b895f50b264286121235c863c1b8bcee1a61f9))
+* support separate Slack channels for main pipeline and feature deployments ([afd68f5](https://github.com/merapar/opinionated-ci-pipeline/commit/afd68f50986b905ffbd859663d871afb1b57e12e))
+
+
+### Bug Fixes
+
+* add prefix to the identifier of ci stack ([48498d6](https://github.com/merapar/opinionated-ci-pipeline/commit/48498d675ab6bbfa009ae864bc6f655fd23dadc4))
+* bitbucket build status key dependent on build name ([fbcc937](https://github.com/merapar/opinionated-ci-pipeline/commit/fbcc9370a4696989c131d5c42fe3be76926bfb24))
+
 ### [2.0.1](https://github.com/merapar/opinionated-ci-pipeline/compare/v2.0.0...v2.0.1) (2023-10-31)
 
 
