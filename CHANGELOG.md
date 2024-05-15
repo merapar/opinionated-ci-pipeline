@@ -2,6 +2,8 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.0.0](https://github.com/merapar/opinionated-ci-pipeline/compare/v3.0.0-beta.0...v3.0.0) (2024-05-15)
+
 ## [3.0.0-beta.0](https://github.com/merapar/opinionated-ci-pipeline/compare/v2.1.0-beta.0...v3.0.0-beta.0) (2024-02-27)
 
 
