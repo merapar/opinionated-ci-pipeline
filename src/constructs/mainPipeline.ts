@@ -27,7 +27,7 @@ import {PolicyStatement} from 'aws-cdk-lib/aws-iam';
 import {Code} from 'aws-cdk-lib/aws-lambda';
 import {Topic} from 'aws-cdk-lib/aws-sns';
 import {IStringParameter} from 'aws-cdk-lib/aws-ssm';
-import {PipelineNotificationEvents} from 'aws-cdk-lib/aws-codepipeline';
+import {Pipeline, PipelineNotificationEvents} from 'aws-cdk-lib/aws-codepipeline';
 import {capitalizeFirstLetter} from '../util/string';
 
 export interface MainPipelineProps extends Pick<ResolvedApplicationProps,
@@ -61,7 +61,10 @@ export class MainPipeline extends Construct {
                 ],
                 primaryOutputDirectory: props.cdkOutputDirectory,
             }),
-            crossAccountKeys: true,
+            codePipeline: new Pipeline(this, Stack.of(this).stackName, {
+                crossAccountKeys: true,
+                restartExecutionOnUpdate: props.codePipeline?.restartExecutionOnUpdate,
+            }),
             codeBuildDefaults: props.codeBuild,
         }, props.codePipeline));
 
