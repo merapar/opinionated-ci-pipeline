@@ -64,7 +64,7 @@ export class FeatureBranchBuilds extends Construct {
                 phases: {
                     install: {
                         commands: [
-                            'ENV_NAME=$(echo ${BRANCH_NAME} | awk \'{print tolower($0)}\')',
+                            'ENV_NAME=$(echo ${BRANCH_NAME} | awk \'{ gsub("/", "-", $0); print tolower($0); }\')',
                             ...(commands.preInstall || []),
                             ...(commands.install || []),
                         ],
@@ -137,7 +137,7 @@ export class FeatureBranchBuilds extends Construct {
                 phases: {
                     install: {
                         commands: [
-                            'ENV_NAME=$(echo ${BRANCH_NAME} | awk \'{print tolower($0)}\')',
+                            'ENV_NAME=$(echo ${BRANCH_NAME} | awk \'{ gsub("/", "-", $0); print tolower($0); }\')',
                             ...(commands.preInstall || []),
                             ...(commands.install || []),
                         ],
