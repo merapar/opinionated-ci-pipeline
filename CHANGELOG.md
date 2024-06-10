@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.1.0](https://github.com/merapar/opinionated-ci-pipeline/compare/v3.0.0...v3.1.0) (2024-06-10)
+
+
+### Features
+
+* **feature-branch:** support slash in branch names ([3835d09](https://github.com/merapar/opinionated-ci-pipeline/commit/3835d09a078ea3f03dd9377ca247fbbe93d5fae0))
+
+
+### Bug Fixes
+
+* **feature-branch:** add missing substitution ([d6d6f27](https://github.com/merapar/opinionated-ci-pipeline/commit/d6d6f272ba20f06d9983150659778cc1d3460f75))
+
 ## [3.0.0](https://github.com/merapar/opinionated-ci-pipeline/compare/v3.0.0-beta.0...v3.0.0) (2024-05-15)
 
 ## [3.0.0-beta.0](https://github.com/merapar/opinionated-ci-pipeline/compare/v2.1.0-beta.0...v3.0.0-beta.0) (2024-02-27)
