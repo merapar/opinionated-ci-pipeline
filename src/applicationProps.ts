@@ -190,6 +190,7 @@ export interface CodePipelineOverrides {
     readonly role?: IRole;
     readonly useChangeSets?: boolean;
     readonly enableKeyRotation?: boolean;
+    readonly restartExecutionOnUpdate?: boolean
 }
 
 export interface SlackChannelConfig {
