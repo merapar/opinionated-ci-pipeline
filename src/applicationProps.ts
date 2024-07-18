@@ -96,6 +96,12 @@ export interface RepositoryProps {
      * @default main
      */
     readonly defaultBranch?: string;
+
+    /**
+     * Configure the prefix branch names that should be automatically deployed as feature branches
+     * @default deploy all branches
+     */
+    readonly featureBranchPrefixes?: string[];
 }
 
 export interface BuildCommands {
