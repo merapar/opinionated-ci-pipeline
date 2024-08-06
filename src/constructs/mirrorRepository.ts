@@ -3,7 +3,7 @@ import {Repository} from 'aws-cdk-lib/aws-codecommit';
 import {Construct} from 'constructs';
 import {IStringParameter} from 'aws-cdk-lib/aws-ssm';
 import {getProjectName} from '../util/context';
-import {CustomResource, Duration, Fn, Stack} from 'aws-cdk-lib';
+import {CustomResource, Duration, Fn, RemovalPolicy, Stack} from 'aws-cdk-lib';
 import {CustomNodejsFunction} from './customNodejsFunction';
 import {Code, Function as LambdaFunction, FunctionUrlAuthType, LayerVersion, Runtime} from 'aws-cdk-lib/aws-lambda';
 import * as path from 'path';
@@ -11,6 +11,7 @@ import {AwsCustomResource, AwsCustomResourcePolicy, PhysicalResourceId, Provider
 import {RetentionDays} from 'aws-cdk-lib/aws-logs';
 import {AwsCliLayer} from 'aws-cdk-lib/lambda-layer-awscli';
 import {PolicyStatement} from 'aws-cdk-lib/aws-iam';
+import * as s3 from 'aws-cdk-lib/aws-s3';
 
 export interface MirrorRepositoryProps extends Pick<ResolvedApplicationProps, 'repository'> {
     repoTokenParam: IStringParameter;
@@ -19,18 +20,33 @@ export interface MirrorRepositoryProps extends Pick<ResolvedApplicationProps, 'r
 export class MirrorRepository extends Construct {
 
     readonly codeCommitRepository: Repository;
+    readonly sourceBucket: s3.IBucket;
 
     constructor(scope: Construct, id: string, props: MirrorRepositoryProps) {
         super(scope, id);
 
         const webhookSecret = Fn.select(2, Fn.split('/', Stack.of(this).stackId));
 
+        this.sourceBucket = new s3.Bucket(this, 'SourceBucket', {
+            enforceSSL: true,
+            removalPolicy: RemovalPolicy.DESTROY,
+            blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+            versioned: true,
+            lifecycleRules: [
+                {
+                    id: 'ExpireOldVersions',
+                    noncurrentVersionExpiration: Duration.days(30),
+                    noncurrentVersionsToRetain: 20,
+                },
+            ],
+        });
+
         this.codeCommitRepository = this.createCodeCommitRepository();
 
         const {
             mirrorFunction,
             triggerMirrorFunctionUrl,
-        } = this.createRepositoryMirroring(webhookSecret, props.repoTokenParam, props.repository, this.codeCommitRepository);
+        } = this.createRepositoryMirroring(webhookSecret, props.repoTokenParam, props.repository, this.sourceBucket);
 
         this.createWebhook(props.repoTokenParam, props.repository, triggerMirrorFunctionUrl);
 
@@ -43,7 +59,7 @@ export class MirrorRepository extends Construct {
         });
     }
 
-    private createRepositoryMirroring(webhookSecret: string, repoTokenParam: IStringParameter, repository: ApplicationProps['repository'], codeCommit: Repository) {
+    private createRepositoryMirroring(webhookSecret: string, repoTokenParam: IStringParameter, repository: ApplicationProps['repository'], bucket: s3.IBucket) {
         const sourceRepositoryDomain = repository.host === 'github' ? 'github.com' : 'bitbucket.org';
 
         const mirrorFunction = new LambdaFunction(this, 'RepositoryMirroring', {
@@ -55,7 +71,7 @@ export class MirrorRepository extends Construct {
             environment: {
                 HOME: '/var/task',
                 SECRET: webhookSecret,
-                CODECOMMIT_REPO_URL: codeCommit.repositoryCloneUrlHttp,
+                BUCKET_NAME: bucket.bucketName,
                 SOURCE_REPO_DOMAIN: sourceRepositoryDomain,
                 SOURCE_REPO_NAME: repository.name,
                 SOURCE_REPO_TOKEN_PARAM: repoTokenParam.parameterName,
@@ -67,7 +83,7 @@ export class MirrorRepository extends Construct {
             LayerVersion.fromLayerVersionArn(this, 'GitLayer', `arn:aws:lambda:${Stack.of(this).region}:553035198032:layer:git-lambda2:8`),
         );
 
-        codeCommit.grantPullPush(mirrorFunction);
+        bucket.grantWrite(mirrorFunction);
         repoTokenParam.grantRead(mirrorFunction);
 
         const triggerMirrorFunctionUrl = mirrorFunction.addFunctionUrl({

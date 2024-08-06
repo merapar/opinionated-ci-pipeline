@@ -55,6 +55,7 @@ export class CIStack extends Stack {
 
         const mainPipeline = new MainPipeline(this, 'MainPipeline', {
             ...resolvedProps,
+            sourceBucket: mirror.sourceBucket,
             codeCommitRepository: mirror.codeCommitRepository,
             repositoryTokenParam,
         });
