@@ -52,13 +52,6 @@ def handler(event, context):
     if body.get("ref") == f"refs/heads/{defaultBranchName}":
         boto3.client('codepipeline').start_pipeline_execution(
             name=mainPipelineName,
-            sourceRevisions=[
-                {
-                    "actionName": "Source",
-                    "revisionType": 'S3_OBJECT_VERSION_ID',
-                    "revisionValue": version_id,
-                }
-            ],
         )
     elif body.get("ref").startswith("refs/heads/"):
         branch_name = body.get("ref").removeprefix("refs/heads/")
