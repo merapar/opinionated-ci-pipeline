@@ -59,7 +59,12 @@ export class MirrorRepository extends Construct {
         });
     }
 
-    private createRepositoryMirroring(webhookSecret: string, repoTokenParam: IStringParameter, repository: ApplicationProps['repository'], bucket: s3.IBucket) {
+    private createRepositoryMirroring(
+        webhookSecret: string,
+        repoTokenParam: IStringParameter,
+        repository: ApplicationProps['repository'],
+        bucket: s3.IBucket,
+    ) {
         const sourceRepositoryDomain = repository.host === 'github' ? 'github.com' : 'bitbucket.org';
 
         const mirrorFunction = new LambdaFunction(this, 'RepositoryMirroring', {
@@ -75,7 +80,21 @@ export class MirrorRepository extends Construct {
                 SOURCE_REPO_DOMAIN: sourceRepositoryDomain,
                 SOURCE_REPO_NAME: repository.name,
                 SOURCE_REPO_TOKEN_PARAM: repoTokenParam.parameterName,
+                DEFAULT_BRANCH_NAME: repository.defaultBranch || '',
+                MAIN_PIPELINE_NAME: Stack.of(this).stackName,
+                BRANCH_DEPLOY_PROJECT_NAME: `${Stack.of(this).stackName}-featureBranch-deploy`,
+                BRANCH_DESTROY_PROJECT_NAME: `${Stack.of(this).stackName}-featureBranch-destroy`,
             },
+            initialPolicy: [
+                new PolicyStatement({
+                    actions: ['codepipeline:StartPipelineExecution'],
+                    resources: [`arn:aws:codepipeline:${Stack.of(this).region}:${Stack.of(this).account}:${Stack.of(this).stackName}`],
+                }),
+                new PolicyStatement({
+                    actions: ['codebuild:StartBuild'],
+                    resources: [`arn:aws:codebuild:${Stack.of(this).region}:${Stack.of(this).account}:project/${Stack.of(this).stackName}-featureBranch-*`],
+                }),
+            ],
         });
 
         mirrorFunction.addLayers(

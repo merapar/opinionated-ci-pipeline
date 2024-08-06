@@ -5,11 +5,7 @@ import {ManagedPolicy} from 'aws-cdk-lib/aws-iam';
 import {FeatureBranchBuilds} from './constructs/featureBranchBuilds';
 import {MainPipeline} from './constructs/mainPipeline';
 import {
-    ApplicationProps,
-    defaultProps,
-    ResolvedApplicationProps,
-    SlackChannelConfig,
-    SlackNotifications,
+    ApplicationProps, defaultProps, ResolvedApplicationProps, SlackChannelConfig, SlackNotifications,
 } from './applicationProps';
 import {SlackChannelConfiguration} from 'aws-cdk-lib/aws-chatbot';
 import {ITopic, Topic} from 'aws-cdk-lib/aws-sns';
@@ -42,7 +38,6 @@ export class CIStack extends Stack {
         super(scope, id, props);
 
         const resolvedProps = this.resolveProps(props);
-        const projectName = getProjectName(this);
 
         const repositoryTokenParam = StringParameter.fromSecureStringParameterAttributes(this, 'RepositoryTokenParam', {
             parameterName: `/${getProjectName(this)}/ci/repositoryAccessToken`,
@@ -56,18 +51,17 @@ export class CIStack extends Stack {
         const mainPipeline = new MainPipeline(this, 'MainPipeline', {
             ...resolvedProps,
             sourceBucket: mirror.sourceBucket,
-            codeCommitRepository: mirror.codeCommitRepository,
             repositoryTokenParam,
         });
 
         const featureBranchBuilds = new FeatureBranchBuilds(this, 'FeatureBranchBuilds', {
             ...resolvedProps,
-            codeCommitRepository: mirror.codeCommitRepository,
+            sourceBucket: mirror.sourceBucket,
             repositoryTokenParam,
         });
 
         if (resolvedProps.slackNotifications) {
-            this.createSlackNotifications(projectName, resolvedProps.slackNotifications, mainPipeline.failuresTopic, featureBranchBuilds.failuresTopic);
+            this.createSlackNotifications(getProjectName(this), resolvedProps.slackNotifications, mainPipeline.failuresTopic, featureBranchBuilds.failuresTopic);
         }
     }
 

@@ -1,4 +1,3 @@
-import {Repository} from 'aws-cdk-lib/aws-codecommit';
 import * as targets from 'aws-cdk-lib/aws-events-targets';
 import {Construct} from 'constructs';
 import {
@@ -22,24 +21,13 @@ import {PipelineNotificationEvents} from 'aws-cdk-lib/aws-codepipeline';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import {capitalizeFirstLetter} from '../util/string';
 import {S3Trigger} from 'aws-cdk-lib/aws-codepipeline-actions';
-
-/**
- * The repository mirror is packed as a zip file on an S3 bucket.
- * The zip file is automatically unpacked by the CodePipeline source action.
- * Then we need to checkout the repository to unpack it from the Git mirror files.
- */
-const checkoutCommands = [
-    'cd ..',
-    'git clone src repository',
-    'cd repository',
-];
+import {checkoutCommands} from '../util/checkout';
 
 export interface MainPipelineProps extends Pick<ResolvedApplicationProps,
     'stacks' | 'repository' | 'commands' |
     'pipeline' | 'cdkOutputDirectory' | 'codeBuild' | 'codePipeline'
 > {
     sourceBucket: s3.IBucket;
-    codeCommitRepository: Repository;
     repositoryTokenParam: IStringParameter;
 }
 
@@ -83,7 +71,7 @@ export class MainPipeline extends Construct {
 
         pipeline.buildPipeline();
 
-        this.createPipelineBuildNotifications(pipeline, props.repository, props.repositoryTokenParam);
+        this.createPipelineBuildNotifications(pipeline, props.repository, props.repositoryTokenParam, props.sourceBucket);
 
         this.failuresTopic = this.createPipelineFailuresTopic(pipeline);
     }
@@ -198,16 +186,23 @@ export class MainPipeline extends Construct {
      *   - send custom event to EventBridge including the commit SHA,
      * - use EventBridge to send build status to repository.
      */
-    private createPipelineBuildNotifications(pipeline: CodePipeline, repository: ApplicationProps['repository'], repoTokenParam: IStringParameter) {
+    private createPipelineBuildNotifications(
+        pipeline: CodePipeline,
+        repository: ApplicationProps['repository'],
+        repoTokenParam: IStringParameter,
+        sourceBucket: s3.IBucket,
+    ) {
         const pipelineBuildStatusFunction = new CustomNodejsFunction(this, 'PipelineBuildStatus', {
             code: Code.fromAsset(path.join(__dirname, '..', 'lambda', 'pipelineBuildStatus')),
             environment: {
                 REPOSITORY_HOST: repository.host,
                 REPOSITORY_NAME: repository.name,
                 REPOSITORY_TOKEN_PARAM_NAME: repoTokenParam.parameterName,
+                SOURCE_BUCKET_NAME: sourceBucket.bucketName,
             },
         });
         repoTokenParam.grantRead(pipelineBuildStatusFunction);
+        sourceBucket.grantRead(pipelineBuildStatusFunction);
 
         pipelineBuildStatusFunction.addToRolePolicy(new PolicyStatement({
             actions: ['codepipeline:GetPipelineExecution'],
@@ -219,4 +214,3 @@ export class MainPipeline extends Construct {
         });
     }
 }
-

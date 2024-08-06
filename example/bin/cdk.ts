@@ -27,6 +27,7 @@ new CDKApplication({
             environment: 'test',
             post: [
                 'echo "do integration tests here"',
+                'ls',
             ],
         },
     ],
