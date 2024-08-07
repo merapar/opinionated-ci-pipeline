@@ -7,4 +7,5 @@ export const checkoutCommands = [
     'cd ..',
     'git clone src repository',
     'cd repository',
+    'git show --quiet HEAD',
 ];
