@@ -31,6 +31,7 @@ def handler(event, context):
         }
 
     if event.get("body") is None:
+        print("Missing body")
         return {
             "statusCode": 400,
             "body": "Missing body",
@@ -40,6 +41,7 @@ def handler(event, context):
     body = json.loads(event['body'])
 
     if not is_commit_or_branch_event(body):
+        print("Not a commit or branch event, ignoring")
         return {
             "statusCode": 202,
             "body": "Not a commit or branch event, ignoring",
@@ -51,14 +53,17 @@ def handler(event, context):
 
     version_id = ''
     if not branch_deleted:
+        print("Copying repository")
         version_id = copy_repository(commit_sha)
 
     if branch_name == default_branch_name:
+        print("Starting main pipeline execution")
         boto3.client('codepipeline').start_pipeline_execution(
             name=main_pipeline_name,
         )
     else:
         project_name = branch_destroy_project_name if branch_deleted else branch_deploy_project_name
+        print(f"Starting {project_name} build")
         boto3.client('codebuild').start_build(
             projectName=project_name,
             sourceVersion=version_id,
