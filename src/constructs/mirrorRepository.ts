@@ -7,7 +7,7 @@ import {CustomResource, Duration, Fn, RemovalPolicy, Stack} from 'aws-cdk-lib';
 import {CustomNodejsFunction} from './customNodejsFunction';
 import {Code, Function as LambdaFunction, FunctionUrlAuthType, LayerVersion, Runtime} from 'aws-cdk-lib/aws-lambda';
 import * as path from 'path';
-import {AwsCustomResource, AwsCustomResourcePolicy, PhysicalResourceId, Provider} from 'aws-cdk-lib/custom-resources';
+import {Provider} from 'aws-cdk-lib/custom-resources';
 import {RetentionDays} from 'aws-cdk-lib/aws-logs';
 import {AwsCliLayer} from 'aws-cdk-lib/lambda-layer-awscli';
 import {PolicyStatement} from 'aws-cdk-lib/aws-iam';
@@ -44,13 +44,10 @@ export class MirrorRepository extends Construct {
         this.codeCommitRepository = this.createCodeCommitRepository();
 
         const {
-            mirrorFunction,
             triggerMirrorFunctionUrl,
         } = this.createRepositoryMirroring(webhookSecret, props.repoTokenParam, props.repository, this.sourceBucket);
 
         this.createWebhook(props.repoTokenParam, props.repository, triggerMirrorFunctionUrl);
-
-        this.triggerInitialMirror(mirrorFunction, webhookSecret);
     }
 
     private createCodeCommitRepository() {
@@ -136,31 +133,6 @@ export class MirrorRepository extends Construct {
                 RepositoryTokenParamName: repoTokenParam.parameterName,
                 WebhookUrl: webhookUrl,
             },
-        });
-    }
-
-    private triggerInitialMirror(mirrorFunction: LambdaFunction, secret: string) {
-        new AwsCustomResource(this, 'TriggerInitialMirror', {
-            onCreate: {
-                service: 'Lambda',
-                action: 'invoke',
-                parameters: {
-                    InvocationType: 'Event',
-                    FunctionName: mirrorFunction.functionName,
-                    Payload: JSON.stringify({
-                        queryStringParameters: {
-                            secret,
-                        },
-                    }),
-                },
-                physicalResourceId: PhysicalResourceId.of('1'),
-            },
-            policy: AwsCustomResourcePolicy.fromStatements([
-                new PolicyStatement({
-                    actions: ['lambda:InvokeFunction'],
-                    resources: [mirrorFunction.functionArn],
-                }),
-            ]),
         });
     }
 }
