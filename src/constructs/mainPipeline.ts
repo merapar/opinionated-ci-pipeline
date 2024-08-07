@@ -55,7 +55,7 @@ export class MainPipeline extends Construct {
                     ...(props.commands.buildAndTest || []),
                     ...props.commands.synthPipeline,
                 ],
-                primaryOutputDirectory: props.cdkOutputDirectory,
+                primaryOutputDirectory: '../repository/' + (props.cdkOutputDirectory || 'cdk.out'),
             }),
             crossAccountKeys: true,
             codeBuildDefaults: props.codeBuild,
