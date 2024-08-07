@@ -113,7 +113,7 @@ def is_commit_or_branch_event(body):
         case "github":
             return body['ref'].startswith("refs/heads/")
         case "bitbucket":
-            raise Exception("Not implemented yet")
+            return any(lambda change: change['new']['type'] == "branch" or change['closed'] == True for change in body['push']['changes'])
         case _:
             raise Exception("Unknown source repository host")
 
@@ -123,7 +123,10 @@ def get_branch_name(body):
         case "github":
             return body['ref'].removeprefix("refs/heads/")
         case "bitbucket":
-            raise Exception("Not implemented yet")
+            try:
+                return next(change['new']['name'] for change in body['push']['changes'] if change['new']['type'] == "branch")
+            except StopIteration:
+                return next(change['old']['name'] for change in body['push']['changes'] if change['closed'] == True)
         case _:
             raise Exception("Unknown source repository host")
 
@@ -133,7 +136,7 @@ def is_branch_deleted(body):
         case "github":
             return body['deleted']
         case "bitbucket":
-            raise Exception("Not implemented yet")
+            return any(lambda change: change['closed'] == True for change in body['push']['changes'])
         case _:
             raise Exception("Unknown source repository host")
 
@@ -143,6 +146,9 @@ def get_commit_sha(body):
         case "github":
             return body['after']
         case "bitbucket":
-            raise Exception("Not implemented yet")
+            try:
+                return next(change['new']['target']['hash'] for change in body['push']['changes'] if change['new']['type'] == "branch")
+            except StopIteration:
+                return ''
         case _:
             raise Exception("Unknown source repository host")
