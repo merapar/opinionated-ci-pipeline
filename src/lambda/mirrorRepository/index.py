@@ -118,7 +118,7 @@ def is_commit_or_branch_event(body):
         case "github":
             return body['ref'].startswith("refs/heads/")
         case "bitbucket":
-            return any(lambda change: change['new']['type'] == "branch" or change['closed'] == True for change in body['push']['changes'])
+            return any(change['new']['type'] == "branch" or change['closed'] == True for change in body['push']['changes'])
         case _:
             raise Exception("Unknown source repository host")
 
@@ -141,7 +141,7 @@ def is_branch_deleted(body):
         case "github":
             return body['deleted']
         case "bitbucket":
-            return any(lambda change: change['closed'] == True for change in body['push']['changes'])
+            return any(change['closed'] == True for change in body['push']['changes'])
         case _:
             raise Exception("Unknown source repository host")
 
