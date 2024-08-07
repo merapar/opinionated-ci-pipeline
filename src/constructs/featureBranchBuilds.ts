@@ -32,14 +32,14 @@ export class FeatureBranchBuilds extends Construct {
         const source = Source.codeCommit({repository: props.codeCommitRepository});
 
         const deployProject = this.createDeployProject(
-            source, props.codeBuild, props.commands, props.codeCommitRepository, props.repository.defaultBranch,
+            source, props.codeBuild, props.commands, props.codeCommitRepository, props.repository.defaultBranch, props.repository.featureBranchPrefixes
         );
         this.createDeployNotifications(deployProject, props.repository, props.repositoryTokenParam);
 
         this.failuresTopic = this.createBuildFailuresTopic(deployProject);
 
         this.createDestroyProject(
-            source, props.codeBuild, props.commands, props.codeCommitRepository, props.repository.defaultBranch,
+            source, props.codeBuild, props.commands, props.codeCommitRepository, props.repository.defaultBranch, props.repository.featureBranchPrefixes
         );
     }
 
@@ -49,6 +49,7 @@ export class FeatureBranchBuilds extends Construct {
         commands: FeatureBranchBuildsProps['commands'],
         repository: Repository,
         defaultBranch: string,
+        featureBranchPrefixes?: string[],
     ): Project {
         const deployProject = new Project(this, 'DeployProject', {
             projectName: `${Stack.of(this).stackName}-featureBranch-deploy`,
@@ -82,7 +83,7 @@ export class FeatureBranchBuilds extends Construct {
         codeBuild.rolePolicy?.forEach(policy => deployProject.addToRolePolicy(policy));
         this.grantAssumeCDKRoles(deployProject);
 
-        repository.onCommit('OnBranchCommit', this.createProjectTriggerOptions(deployProject, defaultBranch, true));
+        repository.onCommit('OnBranchCommit', this.createProjectTriggerOptions(deployProject, defaultBranch, featureBranchPrefixes, true));
 
         return deployProject;
     }
@@ -122,6 +123,7 @@ export class FeatureBranchBuilds extends Construct {
         commands: FeatureBranchBuildsProps['commands'],
         repository: Repository,
         defaultBranch: string,
+        featureBranchPrefixes?: string[],
     ): Project {
         const destroyProject = new Project(this, 'DestroyProject', {
             projectName: `${Stack.of(this).stackName}-featureBranch-destroy`,
@@ -154,19 +156,18 @@ export class FeatureBranchBuilds extends Construct {
         codeBuild.rolePolicy?.forEach(policy => destroyProject.addToRolePolicy(policy));
         this.grantAssumeCDKRoles(destroyProject);
 
-        repository.onReferenceDeleted('OnBranchRemoval', this.createProjectTriggerOptions(destroyProject, defaultBranch));
+        repository.onReferenceDeleted('OnBranchRemoval', this.createProjectTriggerOptions(destroyProject, defaultBranch, featureBranchPrefixes));
 
         return destroyProject;
     }
 
-    private createProjectTriggerOptions(targetProject: Project, defaultBranch: string, withSourceVersion = false): OnEventOptions {
+    private createProjectTriggerOptions(targetProject: Project, defaultBranch: string, featureBranchPrefixes?: string[], withSourceVersion = false): OnEventOptions {
+        const referenceName = featureBranchPrefixes != null ? [{'prefix': featureBranchPrefixes }] : [{'anything-but': [defaultBranch]}];
         return {
             eventPattern: {
                 detail: {
                     referenceType: ['branch'],
-                    referenceName: [
-                        {'anything-but': [defaultBranch]},
-                    ],
+                    referenceName,
                     referenceFullName: [
                         {'anything-but': {prefix: 'refs/remotes/'}},
                     ],
