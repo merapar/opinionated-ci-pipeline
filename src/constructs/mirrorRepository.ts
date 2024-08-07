@@ -64,6 +64,7 @@ export class MirrorRepository extends Construct {
                 SECRET: webhookSecret,
                 BUCKET_NAME: bucket.bucketName,
                 SOURCE_REPO_DOMAIN: sourceRepositoryDomain,
+                SOURCE_REPO_HOST: repository.host,
                 SOURCE_REPO_NAME: repository.name,
                 SOURCE_REPO_TOKEN_PARAM: repoTokenParam.parameterName,
                 DEFAULT_BRANCH_NAME: repository.defaultBranch || '',

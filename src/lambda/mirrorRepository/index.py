@@ -7,6 +7,7 @@ import json
 
 secret = os.environ["SECRET"]
 source_repo_token_param = os.environ["SOURCE_REPO_TOKEN_PARAM"]
+source_repo_host = os.environ["SOURCE_REPO_HOST"]
 source_repo_domain = os.environ["SOURCE_REPO_DOMAIN"]
 source_repo_name = os.environ["SOURCE_REPO_NAME"]
 bucket_name = os.environ["BUCKET_NAME"]
@@ -19,6 +20,7 @@ source_repo_token = boto3.client('ssm').get_parameter(
     Name=source_repo_token_param,
     WithDecryption=True,
 )["Parameter"]["Value"]
+
 
 def handler(event, context):
     if (event.get("queryStringParameters") is None or event.get("queryStringParameters").get("secret") != secret):
@@ -34,29 +36,29 @@ def handler(event, context):
             "body": "Missing body",
         }
 
+    print(event['body'])
     body = json.loads(event['body'])
 
-    if not body.get("ref").startswith("refs/heads/"):
+    if not is_commit_or_branch_event(body):
         return {
             "statusCode": 202,
             "body": "Not a commit or branch event, ignoring",
         }
 
-    commit_sha = body.get("after")
-    branch_deleted = body.get("deleted")
+    branch_name = get_branch_name(body)
+    commit_sha = get_commit_sha(body)
+    branch_deleted = is_branch_deleted(body)
 
     version_id = ''
     if not branch_deleted:
         version_id = copy_repository(commit_sha)
 
-    if body.get("ref") == f"refs/heads/{default_branch_name}":
+    if branch_name == default_branch_name:
         boto3.client('codepipeline').start_pipeline_execution(
             name=main_pipeline_name,
         )
-    elif body.get("ref").startswith("refs/heads/"):
-        branch_name = body.get("ref").removeprefix("refs/heads/")
-        project_name = branch_destroy_project_name if body.get("deleted") else branch_deploy_project_name
-
+    else:
+        project_name = branch_destroy_project_name if branch_deleted else branch_deploy_project_name
         boto3.client('codebuild').start_build(
             projectName=project_name,
             sourceVersion=version_id,
@@ -104,3 +106,43 @@ def copy_repository(commit_sha):
     )
 
     return put_response["VersionId"]
+
+
+def is_commit_or_branch_event(body):
+    match source_repo_host:
+        case "github":
+            return body['ref'].startswith("refs/heads/")
+        case "bitbucket":
+            raise Exception("Not implemented yet")
+        case _:
+            raise Exception("Unknown source repository host")
+
+
+def get_branch_name(body):
+    match source_repo_host:
+        case "github":
+            return body['ref'].removeprefix("refs/heads/")
+        case "bitbucket":
+            raise Exception("Not implemented yet")
+        case _:
+            raise Exception("Unknown source repository host")
+
+
+def is_branch_deleted(body):
+    match source_repo_host:
+        case "github":
+            return body['deleted']
+        case "bitbucket":
+            raise Exception("Not implemented yet")
+        case _:
+            raise Exception("Unknown source repository host")
+
+
+def get_commit_sha(body):
+    match source_repo_host:
+        case "github":
+            return body['after']
+        case "bitbucket":
+            raise Exception("Not implemented yet")
+        case _:
+            raise Exception("Unknown source repository host")
