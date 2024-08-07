@@ -1,8 +1,6 @@
 import {ApplicationProps, ResolvedApplicationProps} from '../applicationProps';
-import {Repository} from 'aws-cdk-lib/aws-codecommit';
 import {Construct} from 'constructs';
 import {IStringParameter} from 'aws-cdk-lib/aws-ssm';
-import {getProjectName} from '../util/context';
 import {CustomResource, Duration, Fn, RemovalPolicy, Stack} from 'aws-cdk-lib';
 import {CustomNodejsFunction} from './customNodejsFunction';
 import {Code, Function as LambdaFunction, FunctionUrlAuthType, LayerVersion, Runtime} from 'aws-cdk-lib/aws-lambda';
@@ -19,7 +17,6 @@ export interface MirrorRepositoryProps extends Pick<ResolvedApplicationProps, 'r
 
 export class MirrorRepository extends Construct {
 
-    readonly codeCommitRepository: Repository;
     readonly sourceBucket: s3.IBucket;
 
     constructor(scope: Construct, id: string, props: MirrorRepositoryProps) {
@@ -41,19 +38,11 @@ export class MirrorRepository extends Construct {
             ],
         });
 
-        this.codeCommitRepository = this.createCodeCommitRepository();
-
         const {
             triggerMirrorFunctionUrl,
         } = this.createRepositoryMirroring(webhookSecret, props.repoTokenParam, props.repository, this.sourceBucket);
 
         this.createWebhook(props.repoTokenParam, props.repository, triggerMirrorFunctionUrl);
-    }
-
-    private createCodeCommitRepository() {
-        return new Repository(this, 'Repository', {
-            repositoryName: getProjectName(this),
-        });
     }
 
     private createRepositoryMirroring(
