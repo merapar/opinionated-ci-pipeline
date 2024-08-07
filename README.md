@@ -380,12 +380,20 @@ Build:
 npm run build
 ```
 
-Install and deploy example application:
+Change `example/bin/cdk.ts` `repository` to point to your repository.
+
+Then, install and deploy the CI for the example application:
 
 ```bash
 cd example
 pnpm install
 pnpm cdk deploy -c ci=true
+```
+
+One-line command to re-deploy after changes (run from the `example` directory):
+
+```bash
+(cd .. && npm run build && cd example && cdk deploy -m direct -c ci=true) 
 ```
 
 ## Mentions
