@@ -6,17 +6,17 @@ import shutil
 import json
 
 secret = os.environ["SECRET"]
-sourceRepoTokenParam = os.environ["SOURCE_REPO_TOKEN_PARAM"]
-sourceRepoDomain = os.environ["SOURCE_REPO_DOMAIN"]
-sourceRepoName = os.environ["SOURCE_REPO_NAME"]
-bucketName = os.environ["BUCKET_NAME"]
-defaultBranchName = os.environ["DEFAULT_BRANCH_NAME"]
-mainPipelineName = os.environ["MAIN_PIPELINE_NAME"]
-branchDeployProjectName = os.environ["BRANCH_DEPLOY_PROJECT_NAME"]
-branchDestroyProjectName = os.environ["BRANCH_DESTROY_PROJECT_NAME"]
+source_repo_token_param = os.environ["SOURCE_REPO_TOKEN_PARAM"]
+source_repo_domain = os.environ["SOURCE_REPO_DOMAIN"]
+source_repo_name = os.environ["SOURCE_REPO_NAME"]
+bucket_name = os.environ["BUCKET_NAME"]
+default_branch_name = os.environ["DEFAULT_BRANCH_NAME"]
+main_pipeline_name = os.environ["MAIN_PIPELINE_NAME"]
+branch_deploy_project_name = os.environ["BRANCH_DEPLOY_PROJECT_NAME"]
+branch_destroy_project_name = os.environ["BRANCH_DESTROY_PROJECT_NAME"]
 
-sourceRepoToken = boto3.client('ssm').get_parameter(
-    Name=sourceRepoTokenParam,
+source_repo_token = boto3.client('ssm').get_parameter(
+    Name=source_repo_token_param,
     WithDecryption=True,
 )["Parameter"]["Value"]
 
@@ -49,13 +49,13 @@ def handler(event, context):
     if not branch_deleted:
         version_id = copy_repository(commit_sha)
 
-    if body.get("ref") == f"refs/heads/{defaultBranchName}":
+    if body.get("ref") == f"refs/heads/{default_branch_name}":
         boto3.client('codepipeline').start_pipeline_execution(
-            name=mainPipelineName,
+            name=main_pipeline_name,
         )
     elif body.get("ref").startswith("refs/heads/"):
         branch_name = body.get("ref").removeprefix("refs/heads/")
-        project_name = branchDestroyProjectName if body.get("deleted") else branchDeployProjectName
+        project_name = branch_destroy_project_name if body.get("deleted") else branch_deploy_project_name
 
         boto3.client('codebuild').start_build(
             projectName=project_name,
@@ -87,7 +87,7 @@ def copy_repository(commit_sha):
     )
 
     subprocess.run(
-        f"git clone --mirror https://x-token-auth:{sourceRepoToken}@{sourceRepoDomain}/{sourceRepoName}.git repository",
+        f"git clone --mirror https://x-token-auth:{source_repo_token}@{source_repo_domain}/{source_repo_name}.git repository",
         cwd="/tmp",
         shell=True, check=True, text=True
     )
@@ -95,7 +95,7 @@ def copy_repository(commit_sha):
     shutil.make_archive("/tmp/repository-mirror", "zip", "/tmp/repository")
 
     put_response = boto3.client('s3').put_object(
-        Bucket=bucketName,
+        Bucket=bucket_name,
         Key="repository-mirror.zip",
         Body=open("/tmp/repository-mirror.zip", "rb"),
         Metadata={
