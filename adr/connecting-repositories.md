@@ -24,14 +24,20 @@ for both CodePipeline and CodeBuild in a universal way complicated.
 
 ## Decision
 
-To streamline connecting repositories and be able to setup the projects
+~~To streamline connecting repositories and be able to setup the projects
 in a uniform way no matter where the repository is hosted,
-the CI creates an AWS CodeCommit repository to act as a source.
+the CI creates an AWS CodeCommit repository to act as a source.~~
 
-Then, the CI creates a webhook in the source repository that triggers
-a CodeBuild job that syncs the source repository with the CodeCommit.
+~~Then, the CI creates a webhook in the source repository that triggers
+a CodeBuild job that syncs the source repository with the CodeCommit.~~
+
+Since AWS decided to deprecate the CodeCommit,
+we are mirroring the repository putting a zip archive in an S3 bucket.
+Then we trigger the CodePipeline or CodeBuild job,
+pointing the the zip archive as a source.
 
 ## Consequences
 
 1. Uniform way of setting up CodeBuild and CodePipeline jobs.
 2. Additional latency before starting the build.
+3. No commit hash and message information in the CodePipeline execution (only in build logs).

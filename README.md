@@ -395,8 +395,3 @@ One-line command to re-deploy after changes (run from the `example` directory):
 ```bash
 (cd .. && npm run build && cd example && cdk deploy -m direct -c ci=true) 
 ```
-
-## Mentions
-
-Git repository push to CodeCommit inside Lambda function
-based on https://msimpson.co.nz/Github-CodeCommit/
