@@ -1,9 +1,6 @@
 import {Aws, Stack} from 'aws-cdk-lib';
 import {BuildSpec, Project, Source} from 'aws-cdk-lib/aws-codebuild';
-import {Repository} from 'aws-cdk-lib/aws-codecommit';
-import {EventField, OnEventOptions, RuleTargetInput} from 'aws-cdk-lib/aws-events';
 import * as targets from 'aws-cdk-lib/aws-events-targets';
-import {CodeBuildProject} from 'aws-cdk-lib/aws-events-targets';
 import {Construct} from 'constructs';
 import {CustomNodejsFunction} from './customNodejsFunction';
 import * as path from 'path';
@@ -14,11 +11,13 @@ import {Code} from 'aws-cdk-lib/aws-lambda';
 import {Topic} from 'aws-cdk-lib/aws-sns';
 import {getProjectName} from '../util/context';
 import {IStringParameter} from 'aws-cdk-lib/aws-ssm';
+import * as s3 from 'aws-cdk-lib/aws-s3';
+import {checkoutCommands} from '../util/checkout';
 
 export interface FeatureBranchBuildsProps extends Pick<ResolvedApplicationProps,
     'repository' | 'commands' | 'codeBuild'
 > {
-    codeCommitRepository: Repository;
+    sourceBucket: s3.IBucket;
     repositoryTokenParam: IStringParameter;
 }
 
@@ -29,17 +28,20 @@ export class FeatureBranchBuilds extends Construct {
     constructor(scope: Construct, id: string, props: FeatureBranchBuildsProps) {
         super(scope, id);
 
-        const source = Source.codeCommit({repository: props.codeCommitRepository});
+        const source = Source.s3({
+            bucket: props.sourceBucket,
+            path: 'repository-mirror.zip',
+        });
 
         const deployProject = this.createDeployProject(
-            source, props.codeBuild, props.commands, props.codeCommitRepository, props.repository.defaultBranch, props.repository.featureBranchPrefixes
+            source, props.codeBuild, props.commands,
         );
         this.createDeployNotifications(deployProject, props.repository, props.repositoryTokenParam);
 
         this.failuresTopic = this.createBuildFailuresTopic(deployProject);
 
         this.createDestroyProject(
-            source, props.codeBuild, props.commands, props.codeCommitRepository, props.repository.defaultBranch, props.repository.featureBranchPrefixes
+            source, props.codeBuild, props.commands,
         );
     }
 
@@ -47,9 +49,6 @@ export class FeatureBranchBuilds extends Construct {
         source: Source,
         codeBuild: FeatureBranchBuildsProps['codeBuild'],
         commands: FeatureBranchBuildsProps['commands'],
-        repository: Repository,
-        defaultBranch: string,
-        featureBranchPrefixes?: string[],
     ): Project {
         const deployProject = new Project(this, 'DeployProject', {
             projectName: `${Stack.of(this).stackName}-featureBranch-deploy`,
@@ -65,6 +64,8 @@ export class FeatureBranchBuilds extends Construct {
                 phases: {
                     install: {
                         commands: [
+                            ...checkoutCommands,
+                            'git checkout ${BRANCH_NAME}',
                             'ENV_NAME=$(echo ${BRANCH_NAME} | awk \'{ gsub("/", "-", $0); print tolower($0); }\')',
                             ...(commands.preInstall || []),
                             ...(commands.install || []),
@@ -82,8 +83,6 @@ export class FeatureBranchBuilds extends Construct {
 
         codeBuild.rolePolicy?.forEach(policy => deployProject.addToRolePolicy(policy));
         this.grantAssumeCDKRoles(deployProject);
-
-        repository.onCommit('OnBranchCommit', this.createProjectTriggerOptions(deployProject, defaultBranch, featureBranchPrefixes, true));
 
         return deployProject;
     }
@@ -121,9 +120,6 @@ export class FeatureBranchBuilds extends Construct {
         source: Source,
         codeBuild: FeatureBranchBuildsProps['codeBuild'],
         commands: FeatureBranchBuildsProps['commands'],
-        repository: Repository,
-        defaultBranch: string,
-        featureBranchPrefixes?: string[],
     ): Project {
         const destroyProject = new Project(this, 'DestroyProject', {
             projectName: `${Stack.of(this).stackName}-featureBranch-destroy`,
@@ -139,6 +135,7 @@ export class FeatureBranchBuilds extends Construct {
                 phases: {
                     install: {
                         commands: [
+                            ...checkoutCommands,
                             'ENV_NAME=$(echo ${BRANCH_NAME} | awk \'{ gsub("/", "-", $0); print tolower($0); }\')',
                             ...(commands.preInstall || []),
                             ...(commands.install || []),
@@ -156,36 +153,7 @@ export class FeatureBranchBuilds extends Construct {
         codeBuild.rolePolicy?.forEach(policy => destroyProject.addToRolePolicy(policy));
         this.grantAssumeCDKRoles(destroyProject);
 
-        repository.onReferenceDeleted('OnBranchRemoval', this.createProjectTriggerOptions(destroyProject, defaultBranch, featureBranchPrefixes));
-
         return destroyProject;
-    }
-
-    private createProjectTriggerOptions(targetProject: Project, defaultBranch: string, featureBranchPrefixes?: string[], withSourceVersion = false): OnEventOptions {
-        const referenceName = featureBranchPrefixes != null ? [{'prefix': featureBranchPrefixes }] : [{'anything-but': [defaultBranch]}];
-        return {
-            eventPattern: {
-                detail: {
-                    referenceType: ['branch'],
-                    referenceName,
-                    referenceFullName: [
-                        {'anything-but': {prefix: 'refs/remotes/'}},
-                    ],
-                },
-            },
-            target: new CodeBuildProject(targetProject, {
-                event: RuleTargetInput.fromObject({
-                    sourceVersion: withSourceVersion ? EventField.fromPath('$.detail.commitId') : undefined,
-                    environmentVariablesOverride: [
-                        {
-                            name: 'BRANCH_NAME',
-                            value: EventField.fromPath('$.detail.referenceName'),
-                            type: 'PLAINTEXT',
-                        },
-                    ],
-                }),
-            }),
-        };
     }
 
     private grantAssumeCDKRoles(project: Project) {

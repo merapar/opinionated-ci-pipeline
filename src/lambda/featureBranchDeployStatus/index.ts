@@ -16,7 +16,13 @@ export const handler: CodeBuildCloudWatchStateHandler = async (event) => {
 
     const {'project-name': projectName, 'build-id': buildArn} = event.detail;
     const buildId = buildArn.split('/')[1];
-    const commitSha = event.detail['additional-information']['source-version'];
+    const commitSha = event.detail['additional-information']['environment']['environment-variables']
+        .find(variable => variable.name === 'COMMIT_SHA')?.value;
+
+    if (!commitSha) {
+        logger.warn('No commit SHA found in environment variables');
+        return;
+    }
 
     const status = transformStatusName(REPOSITORY_HOST, event.detail['build-status']);
     if (!status) {

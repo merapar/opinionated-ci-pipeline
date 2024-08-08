@@ -1,23 +1,13 @@
-import {Repository} from 'aws-cdk-lib/aws-codecommit';
 import * as targets from 'aws-cdk-lib/aws-events-targets';
 import {Construct} from 'constructs';
 import {
-    ApplicationProps,
-    EnvironmentDeployment,
-    IStacksCreation,
-    ResolvedApplicationProps,
-    WaveDeployment,
+    ApplicationProps, EnvironmentDeployment, IStacksCreation, ResolvedApplicationProps, WaveDeployment,
 } from '../applicationProps';
 import {CustomNodejsFunction} from './customNodejsFunction';
 import * as path from 'path';
 import {NotificationsTopic} from './notificationsTopic';
 import {
-    CodePipeline,
-    CodePipelineProps,
-    CodePipelineSource,
-    ManualApprovalStep,
-    ShellStep,
-    Wave,
+    CodePipeline, CodePipelineProps, CodePipelineSource, ManualApprovalStep, ShellStep, Wave,
 } from 'aws-cdk-lib/pipelines';
 import {merge} from 'lodash';
 import {getEnvironmentConfig, getProjectName} from '../util/context';
@@ -28,13 +18,16 @@ import {Code} from 'aws-cdk-lib/aws-lambda';
 import {Topic} from 'aws-cdk-lib/aws-sns';
 import {IStringParameter} from 'aws-cdk-lib/aws-ssm';
 import {PipelineNotificationEvents} from 'aws-cdk-lib/aws-codepipeline';
+import * as s3 from 'aws-cdk-lib/aws-s3';
 import {capitalizeFirstLetter} from '../util/string';
+import {S3Trigger} from 'aws-cdk-lib/aws-codepipeline-actions';
+import {checkoutCommands} from '../util/checkout';
 
 export interface MainPipelineProps extends Pick<ResolvedApplicationProps,
     'stacks' | 'repository' | 'commands' |
     'pipeline' | 'cdkOutputDirectory' | 'codeBuild' | 'codePipeline'
 > {
-    codeCommitRepository: Repository;
+    sourceBucket: s3.IBucket;
     repositoryTokenParam: IStringParameter;
 }
 
@@ -45,13 +38,16 @@ export class MainPipeline extends Construct {
     constructor(scope: Construct, id: string, props: MainPipelineProps) {
         super(scope, id);
 
-        const source = CodePipelineSource.codeCommit(props.codeCommitRepository, props.repository.defaultBranch);
+        const source = CodePipelineSource.s3(props.sourceBucket, 'repository-mirror.zip', {
+            trigger: S3Trigger.NONE,
+        });
 
         const pipeline = new CodePipeline(this, 'Pipeline', merge<CodePipelineProps, Partial<CodePipelineProps> | undefined>({
             pipelineName: Stack.of(this).stackName,
             synth: new ShellStep('Synth', {
                 input: source,
                 installCommands: [
+                    ...checkoutCommands,
                     ...(props.commands.preInstall || []),
                     ...(props.commands.install || []),
                 ],
@@ -59,7 +55,7 @@ export class MainPipeline extends Construct {
                     ...(props.commands.buildAndTest || []),
                     ...props.commands.synthPipeline,
                 ],
-                primaryOutputDirectory: props.cdkOutputDirectory,
+                primaryOutputDirectory: '../repository/' + (props.cdkOutputDirectory || 'cdk.out'),
             }),
             crossAccountKeys: true,
             codeBuildDefaults: props.codeBuild,
@@ -75,7 +71,7 @@ export class MainPipeline extends Construct {
 
         pipeline.buildPipeline();
 
-        this.createPipelineBuildNotifications(pipeline, props.repository, props.repositoryTokenParam);
+        this.createPipelineBuildNotifications(pipeline, props.repository, props.repositoryTokenParam, props.sourceBucket);
 
         this.failuresTopic = this.createPipelineFailuresTopic(pipeline);
     }
@@ -106,13 +102,19 @@ export class MainPipeline extends Construct {
         if (step.pre && step.pre.length > 0) {
             wave.addPre(new ShellStep(`PreWave${capitalizeFirstLetter(step.wave)}`, {
                 env: {WAVE_NAME: step.wave},
-                commands: step.pre,
+                commands: [
+                    ...checkoutCommands,
+                    ...step.pre,
+                ],
             }));
         }
         if (step.post && step.post.length > 0) {
             wave.addPost(new ShellStep(`PostWave${capitalizeFirstLetter(step.wave)}`, {
                 env: {WAVE_NAME: step.wave},
-                commands: step.post,
+                commands: [
+                    ...checkoutCommands,
+                    ...step.post,
+                ],
             }));
         }
     }
@@ -138,7 +140,10 @@ export class MainPipeline extends Construct {
                     ...envVariables,
                     ENV_NAME: step.environment,
                 },
-                commands: step.pre,
+                commands: [
+                    ...checkoutCommands,
+                    ...step.pre,
+                ],
             }));
         }
         if (step.post && step.post.length > 0) {
@@ -147,7 +152,10 @@ export class MainPipeline extends Construct {
                     ...envVariables,
                     ENV_NAME: step.environment,
                 },
-                commands: step.post,
+                commands: [
+                    ...checkoutCommands,
+                    ...step.post,
+                ],
             }));
         }
     }
@@ -178,16 +186,23 @@ export class MainPipeline extends Construct {
      *   - send custom event to EventBridge including the commit SHA,
      * - use EventBridge to send build status to repository.
      */
-    private createPipelineBuildNotifications(pipeline: CodePipeline, repository: ApplicationProps['repository'], repoTokenParam: IStringParameter) {
+    private createPipelineBuildNotifications(
+        pipeline: CodePipeline,
+        repository: ApplicationProps['repository'],
+        repoTokenParam: IStringParameter,
+        sourceBucket: s3.IBucket,
+    ) {
         const pipelineBuildStatusFunction = new CustomNodejsFunction(this, 'PipelineBuildStatus', {
             code: Code.fromAsset(path.join(__dirname, '..', 'lambda', 'pipelineBuildStatus')),
             environment: {
                 REPOSITORY_HOST: repository.host,
                 REPOSITORY_NAME: repository.name,
                 REPOSITORY_TOKEN_PARAM_NAME: repoTokenParam.parameterName,
+                SOURCE_BUCKET_NAME: sourceBucket.bucketName,
             },
         });
         repoTokenParam.grantRead(pipelineBuildStatusFunction);
+        sourceBucket.grantRead(pipelineBuildStatusFunction);
 
         pipelineBuildStatusFunction.addToRolePolicy(new PolicyStatement({
             actions: ['codepipeline:GetPipelineExecution'],
@@ -199,4 +214,3 @@ export class MainPipeline extends Construct {
         });
     }
 }
-
