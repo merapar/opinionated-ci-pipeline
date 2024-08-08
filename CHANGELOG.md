@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.2.0-beta.0](https://github.com/merapar/opinionated-ci-pipeline/compare/v3.1.0...v3.2.0-beta.0) (2024-08-08)
+
+
+### Features
+
+* **feature-branch:** enable feature branch filtering ([cc3d695](https://github.com/merapar/opinionated-ci-pipeline/commit/cc3d695f477d1fc0e02b29a35892f77f4e8eca62))
+
 ## [3.1.0](https://github.com/merapar/opinionated-ci-pipeline/compare/v3.0.0...v3.1.0) (2024-06-10)
 
 
