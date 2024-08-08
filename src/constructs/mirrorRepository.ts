@@ -71,6 +71,7 @@ export class MirrorRepository extends Construct {
                 MAIN_PIPELINE_NAME: Stack.of(this).stackName,
                 BRANCH_DEPLOY_PROJECT_NAME: `${Stack.of(this).stackName}-featureBranch-deploy`,
                 BRANCH_DESTROY_PROJECT_NAME: `${Stack.of(this).stackName}-featureBranch-destroy`,
+                FEATURE_BRANCH_PREFIXES: repository.featureBranchPrefixes?.join(',') || '',
             },
             initialPolicy: [
                 new PolicyStatement({

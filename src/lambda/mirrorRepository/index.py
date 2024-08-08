@@ -16,6 +16,9 @@ main_pipeline_name = os.environ["MAIN_PIPELINE_NAME"]
 branch_deploy_project_name = os.environ["BRANCH_DEPLOY_PROJECT_NAME"]
 branch_destroy_project_name = os.environ["BRANCH_DESTROY_PROJECT_NAME"]
 
+feature_branch_prefixes = os.environ["FEATURE_BRANCH_PREFIXES"]
+feature_branch_prefixes = feature_branch_prefixes.split(",") if feature_branch_prefixes != "" else []
+
 source_repo_token = boto3.client('ssm').get_parameter(
     Name=source_repo_token_param,
     WithDecryption=True,
@@ -50,6 +53,13 @@ def handler(event, context):
     branch_name = get_branch_name(body)
     commit_sha = get_commit_sha(body)
     branch_deleted = is_branch_deleted(body)
+
+    if len(feature_branch_prefixes) > 0 and branch_name != default_branch_name and not branch_name.startswith(tuple(feature_branch_prefixes)):
+        print("Feature branch not matching allowed prefix, ignoring")
+        return {
+            "statusCode": 202,
+            "body": "Feature branch not matching allowed prefix, ignoring",
+        }
 
     version_id = ''
     if not branch_deleted:
