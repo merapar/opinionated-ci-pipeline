@@ -11,7 +11,7 @@ new CDKApplication({
     },
     repository: {
         host: 'github',
-        name: 'm-radzikowski/opinionated-ci-pipeline',
+        name: 'merapar/opinionated-ci-pipeline',
     },
     packageManager: 'pnpm',
     commands: {
@@ -27,7 +27,6 @@ new CDKApplication({
             environment: 'test',
             post: [
                 'echo "do integration tests here"',
-                'ls',
             ],
         },
     ],
