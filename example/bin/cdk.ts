@@ -11,7 +11,7 @@ new CDKApplication({
     },
     repository: {
         host: 'github',
-        name: 'merapar/opinionated-cdk-pipeline',
+        name: 'merapar/opinionated-ci-pipeline',
     },
     packageManager: 'pnpm',
     commands: {
@@ -35,7 +35,9 @@ new CDKApplication({
         selfMutation: false,
     },
     slackNotifications: {
-        workspaceId: 'T0D4SS2Q1',
-        channelId: 'C04S33E0G8Y',
+        mainPipelineFailures: {
+            workspaceId: 'T0D4SS2Q1',
+            channelId: 'C04S33E0G8Y',
+        },
     },
 });

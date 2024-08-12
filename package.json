@@ -29,25 +29,26 @@
     "lodash": "^4.17.21"
   },
   "peerDependencies": {
-    "aws-cdk-lib": "^2.88.0",
+    "aws-cdk-lib": "^2.151.0",
     "constructs": "^10.0.0"
   },
   "devDependencies": {
     "@aws-lambda-powertools/logger": "1.5.1",
     "@aws-sdk/client-codebuild": "3.282.0",
     "@aws-sdk/client-codepipeline": "3.262.0",
+    "@aws-sdk/client-s3": "3.262.0",
     "@aws-sdk/client-ssm": "3.282.0",
     "@commitlint/cli": "17.4.4",
     "@commitlint/config-conventional": "17.4.4",
     "@types/aws-lambda": "8.10.110",
     "@types/lodash": "4.14.191",
     "@types/node": "18.11.18",
-    "@typescript-eslint/eslint-plugin": "5.53.0",
-    "@typescript-eslint/parser": "5.53.0",
-    "aws-cdk-lib": "2.88.0",
+    "@typescript-eslint/eslint-plugin": "8.0.1",
+    "@typescript-eslint/parser": "8.0.1",
+    "aws-cdk-lib": "2.151.0",
     "constructs": "10.0.0",
     "esbuild": "0.17.11",
-    "eslint": "8.34.0",
+    "eslint": "8.57.0",
     "husky": "^8.0.0",
     "jsii": "5.4.31",
     "jsii-pacmak": "1.102.0",
@@ -56,7 +57,7 @@
     "rimraf": "4.1.2",
     "source-map-support": "0.5.21",
     "standard-version": "9.5.0",
-    "typescript": "3.9.10",
+    "typescript": "5.5.4",
     "undici": "5.20.0"
   },
   "lint-staged": {

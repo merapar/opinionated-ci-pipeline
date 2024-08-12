@@ -27,7 +27,6 @@
     "comma-dangle": [
       "warn",
       "always-multiline"
-    ],
-    "@typescript-eslint/member-delimiter-style": "warn"
+    ]
   }
 }

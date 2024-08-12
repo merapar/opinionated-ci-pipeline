@@ -1,16 +1,15 @@
 import {ApplicationProps, ResolvedApplicationProps} from '../applicationProps';
-import {Repository} from 'aws-cdk-lib/aws-codecommit';
 import {Construct} from 'constructs';
 import {IStringParameter} from 'aws-cdk-lib/aws-ssm';
-import {getProjectName} from '../util/context';
-import {CustomResource, Duration, Fn, Stack} from 'aws-cdk-lib';
+import {CustomResource, Duration, Fn, RemovalPolicy, Stack} from 'aws-cdk-lib';
 import {CustomNodejsFunction} from './customNodejsFunction';
 import {Code, Function as LambdaFunction, FunctionUrlAuthType, LayerVersion, Runtime} from 'aws-cdk-lib/aws-lambda';
 import * as path from 'path';
-import {AwsCustomResource, AwsCustomResourcePolicy, PhysicalResourceId, Provider} from 'aws-cdk-lib/custom-resources';
+import {Provider} from 'aws-cdk-lib/custom-resources';
 import {RetentionDays} from 'aws-cdk-lib/aws-logs';
 import {AwsCliLayer} from 'aws-cdk-lib/lambda-layer-awscli';
 import {PolicyStatement} from 'aws-cdk-lib/aws-iam';
+import * as s3 from 'aws-cdk-lib/aws-s3';
 
 export interface MirrorRepositoryProps extends Pick<ResolvedApplicationProps, 'repository'> {
     repoTokenParam: IStringParameter;
@@ -18,32 +17,40 @@ export interface MirrorRepositoryProps extends Pick<ResolvedApplicationProps, 'r
 
 export class MirrorRepository extends Construct {
 
-    readonly codeCommitRepository: Repository;
+    readonly sourceBucket: s3.IBucket;
 
     constructor(scope: Construct, id: string, props: MirrorRepositoryProps) {
         super(scope, id);
 
         const webhookSecret = Fn.select(2, Fn.split('/', Stack.of(this).stackId));
 
-        this.codeCommitRepository = this.createCodeCommitRepository();
+        this.sourceBucket = new s3.Bucket(this, 'SourceBucket', {
+            enforceSSL: true,
+            removalPolicy: RemovalPolicy.DESTROY,
+            blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+            versioned: true,
+            lifecycleRules: [
+                {
+                    id: 'ExpireOldVersions',
+                    noncurrentVersionExpiration: Duration.days(30),
+                    noncurrentVersionsToRetain: 20,
+                },
+            ],
+        });
 
         const {
-            mirrorFunction,
             triggerMirrorFunctionUrl,
-        } = this.createRepositoryMirroring(webhookSecret, props.repoTokenParam, props.repository, this.codeCommitRepository);
+        } = this.createRepositoryMirroring(webhookSecret, props.repoTokenParam, props.repository, this.sourceBucket);
 
         this.createWebhook(props.repoTokenParam, props.repository, triggerMirrorFunctionUrl);
-
-        this.triggerInitialMirror(mirrorFunction, webhookSecret);
     }
 
-    private createCodeCommitRepository() {
-        return new Repository(this, 'Repository', {
-            repositoryName: getProjectName(this),
-        });
-    }
-
-    private createRepositoryMirroring(webhookSecret: string, repoTokenParam: IStringParameter, repository: ApplicationProps['repository'], codeCommit: Repository) {
+    private createRepositoryMirroring(
+        webhookSecret: string,
+        repoTokenParam: IStringParameter,
+        repository: ApplicationProps['repository'],
+        bucket: s3.IBucket,
+    ) {
         const sourceRepositoryDomain = repository.host === 'github' ? 'github.com' : 'bitbucket.org';
 
         const mirrorFunction = new LambdaFunction(this, 'RepositoryMirroring', {
@@ -55,11 +62,27 @@ export class MirrorRepository extends Construct {
             environment: {
                 HOME: '/var/task',
                 SECRET: webhookSecret,
-                CODECOMMIT_REPO_URL: codeCommit.repositoryCloneUrlHttp,
+                BUCKET_NAME: bucket.bucketName,
                 SOURCE_REPO_DOMAIN: sourceRepositoryDomain,
+                SOURCE_REPO_HOST: repository.host,
                 SOURCE_REPO_NAME: repository.name,
                 SOURCE_REPO_TOKEN_PARAM: repoTokenParam.parameterName,
+                DEFAULT_BRANCH_NAME: repository.defaultBranch || '',
+                MAIN_PIPELINE_NAME: Stack.of(this).stackName,
+                BRANCH_DEPLOY_PROJECT_NAME: `${Stack.of(this).stackName}-featureBranch-deploy`,
+                BRANCH_DESTROY_PROJECT_NAME: `${Stack.of(this).stackName}-featureBranch-destroy`,
+                FEATURE_BRANCH_PREFIXES: repository.featureBranchPrefixes?.join(',') || '',
             },
+            initialPolicy: [
+                new PolicyStatement({
+                    actions: ['codepipeline:StartPipelineExecution'],
+                    resources: [`arn:aws:codepipeline:${Stack.of(this).region}:${Stack.of(this).account}:${Stack.of(this).stackName}`],
+                }),
+                new PolicyStatement({
+                    actions: ['codebuild:StartBuild'],
+                    resources: [`arn:aws:codebuild:${Stack.of(this).region}:${Stack.of(this).account}:project/${Stack.of(this).stackName}-featureBranch-*`],
+                }),
+            ],
         });
 
         mirrorFunction.addLayers(
@@ -67,7 +90,7 @@ export class MirrorRepository extends Construct {
             LayerVersion.fromLayerVersionArn(this, 'GitLayer', `arn:aws:lambda:${Stack.of(this).region}:553035198032:layer:git-lambda2:8`),
         );
 
-        codeCommit.grantPullPush(mirrorFunction);
+        bucket.grantWrite(mirrorFunction);
         repoTokenParam.grantRead(mirrorFunction);
 
         const triggerMirrorFunctionUrl = mirrorFunction.addFunctionUrl({
@@ -101,31 +124,6 @@ export class MirrorRepository extends Construct {
                 RepositoryTokenParamName: repoTokenParam.parameterName,
                 WebhookUrl: webhookUrl,
             },
-        });
-    }
-
-    private triggerInitialMirror(mirrorFunction: LambdaFunction, secret: string) {
-        new AwsCustomResource(this, 'TriggerInitialMirror', {
-            onCreate: {
-                service: 'Lambda',
-                action: 'invoke',
-                parameters: {
-                    InvocationType: 'Event',
-                    FunctionName: mirrorFunction.functionName,
-                    Payload: JSON.stringify({
-                        queryStringParameters: {
-                            secret,
-                        },
-                    }),
-                },
-                physicalResourceId: PhysicalResourceId.of('1'),
-            },
-            policy: AwsCustomResourcePolicy.fromStatements([
-                new PolicyStatement({
-                    actions: ['lambda:InvokeFunction'],
-                    resources: [mirrorFunction.functionArn],
-                }),
-            ]),
         });
     }
 }
