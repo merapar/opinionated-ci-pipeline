@@ -1,4 +1,3 @@
-import {Duration} from 'aws-cdk-lib';
 import {ComputeType, LinuxBuildImage} from 'aws-cdk-lib/aws-codebuild';
 import {IRole} from 'aws-cdk-lib/aws-iam';
 import {CodeBuildOptions, DockerCredential} from 'aws-cdk-lib/pipelines';
@@ -110,12 +109,48 @@ export interface RepositoryProps {
 }
 
 export interface BuildCommands {
+    /**
+     * Executed at the beginning of the Build step and feature branch deployment and destruction.
+     */
     readonly preInstall?: string[];
+    /**
+     * Executed after `preInstall` in the Build step and feature branch deployment and destruction.
+     * By default, installs `aws-cdk@2` globally and `npm` or `pnpm` dependencies if `packageManager` is set.
+     */
     readonly install?: string[];
+    /**
+     * Executed after `install` in the Build step and feature branch deployment.
+     */
     readonly buildAndTest?: string[];
+    /**
+     * Executed after the Build step. By default, synths the CDK app.
+     */
     readonly synthPipeline?: string[];
+    /**
+     * Executed after `buildAndTest` in the feature branch deployment.
+     */
+    readonly preDeployEnvironment?: string[];
+    /**
+     * Executed after `preDeployEnvironment` in the feature branch deployment.
+     * By default, deploys all CDK app stacks to the environment.
+     */
     readonly deployEnvironment?: string[];
+    /**
+     * Executed after `deployEnvironment` in the feature branch deployment.
+     */
+    readonly postDeployEnvironment?: string[];
+    /**
+     * Executed after `install` in the feature branch destruction.
+     */
+    readonly preDestroyEnvironment?: string[];
+    /**
+     * Executed after `preDestroyEnvironment` in the feature branch destruction.
+     */
     readonly destroyEnvironment?: string[];
+    /**
+     * Executed after `destroyEnvironment` in the feature branch destruction.
+     */
+    readonly postDestroyEnvironment?: string[];
 }
 
 export interface WaveDeployment {

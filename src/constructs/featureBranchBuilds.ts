@@ -70,7 +70,9 @@ export class FeatureBranchBuilds extends Construct {
                     build: {
                         commands: [
                             ...(commands.buildAndTest || []),
+                            ...(commands.preDeployEnvironment || []),
                             ...commands.deployEnvironment,
+                            ...(commands.postDeployEnvironment || []),
                         ],
                     },
                 },
@@ -135,7 +137,9 @@ export class FeatureBranchBuilds extends Construct {
                     },
                     build: {
                         commands: [
+                            ...(commands.preDestroyEnvironment || []),
                             ...commands.destroyEnvironment,
+                            ...(commands.postDestroyEnvironment || []),
                         ],
                     },
                 },
