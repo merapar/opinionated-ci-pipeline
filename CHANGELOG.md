@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [4.0.0-beta.0](https://github.com/merapar/opinionated-ci-pipeline/compare/v3.2.0-beta.0...v4.0.0-beta.0) (2024-08-13)
+
+
+### ⚠ BREAKING CHANGES
+
+* don't use overriden CodeBuild properties for Assets upload jobs
+* don't use ChangeSets by default
+* replace CodeCommit mirror repository with S3 archive (#11)
+
+### Features
+
+* deploy feature branch environment with concurrency set to 5 ([f6dfb99](https://github.com/merapar/opinionated-ci-pipeline/commit/f6dfb99d2d6b8a56fd002e37218f23aa69a258f5))
+* don't use ChangeSets by default ([d574125](https://github.com/merapar/opinionated-ci-pipeline/commit/d574125a7a40ed1de64be75c3be6262e2ce4becd))
+* don't use overriden CodeBuild properties for Assets upload jobs ([e9c42f8](https://github.com/merapar/opinionated-ci-pipeline/commit/e9c42f8aee627095235b58a33bf22af82529190d))
+* pre and post deployment commands ([374eb83](https://github.com/merapar/opinionated-ci-pipeline/commit/374eb83fc60c0ba4a68a2aae8660a7c68060e1ec))
+* replace CodeCommit mirror repository with S3 archive ([#11](https://github.com/merapar/opinionated-ci-pipeline/issues/11)) ([bec46f3](https://github.com/merapar/opinionated-ci-pipeline/commit/bec46f35d1961961173cb32296333b511721f462))
+* support skip ci tags in commit messages ([#12](https://github.com/merapar/opinionated-ci-pipeline/issues/12)) ([e965050](https://github.com/merapar/opinionated-ci-pipeline/commit/e9650504653a33e46208e09896568036a7cabf9e))
+
 ## [3.2.0-beta.0](https://github.com/merapar/opinionated-ci-pipeline/compare/v3.1.0...v3.2.0-beta.0) (2024-08-08)
 
 
