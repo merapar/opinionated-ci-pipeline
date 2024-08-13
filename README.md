@@ -5,8 +5,6 @@
 
 CI/CD utilizing [CDK Pipelines](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.pipelines-readme.html).
 
-See the [announcement blog post](https://articles.merapar.com/finally-the-cdk-ci-pipeline-that-serverless-deserves) for examples and architecture diagrams.
-
 Features:
 
 - pipeline deploying application from the default branch
@@ -18,6 +16,12 @@ Features:
 - supports commit message tags to skip deployments (`[skip ci]` or `[no ci]`).
 
 Currently supported source repositories are GitHub and Bitbucket.
+
+Pipeline architecture:
+
+![Pipeline architecture](.github/architecture.png)
+
+See the [announcement blog post](https://articles.merapar.com/finally-the-cdk-ci-pipeline-that-serverless-deserves) for more details and examples.
 
 ## Table of contents
 
