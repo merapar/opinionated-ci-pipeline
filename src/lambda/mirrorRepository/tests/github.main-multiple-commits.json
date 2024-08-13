@@ -1,0 +1,51 @@
+{
+  "ref": "refs/heads/main",
+  "before": "50135ccbcf6832602e2901afc681354344dbfc7c",
+  "after": "8610620cd9468e518cf629067d1429fa29173441",
+  "created": false,
+  "deleted": false,
+  "forced": false,
+  "base_ref": null,
+  "commits": [
+    {
+      "id": "8497c88cabef8ecf42e6174f3dec42adb19d829a",
+      "tree_id": "d4830d2003febc23436dd2ccac19033af9ec78a1",
+      "distinct": true,
+      "message": "lorem",
+      "timestamp": "2024-08-12T11:32:17+02:00",
+      "added": [],
+      "removed": [],
+      "modified": []
+    },
+    {
+      "id": "19a9039d2346f90d05bc3b1031864ec478ea3224",
+      "tree_id": "d4830d2003febc23436dd2ccac19033af9ec78a1",
+      "distinct": true,
+      "message": "ipsum",
+      "timestamp": "2024-08-12T11:32:24+02:00",
+      "added": [],
+      "removed": [],
+      "modified": []
+    },
+    {
+      "id": "8610620cd9468e518cf629067d1429fa29173441",
+      "tree_id": "d4830d2003febc23436dd2ccac19033af9ec78a1",
+      "distinct": true,
+      "message": "[skip ci] dolor",
+      "timestamp": "2024-08-12T11:32:38+02:00",
+      "added": [],
+      "removed": [],
+      "modified": []
+    }
+  ],
+  "head_commit": {
+    "id": "8610620cd9468e518cf629067d1429fa29173441",
+    "tree_id": "d4830d2003febc23436dd2ccac19033af9ec78a1",
+    "distinct": true,
+    "message": "[skip ci] dolor",
+    "timestamp": "2024-08-12T11:32:38+02:00",
+    "added": [],
+    "removed": [],
+    "modified": []
+  }
+}

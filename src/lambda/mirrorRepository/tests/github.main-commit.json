@@ -1,0 +1,31 @@
+{
+  "ref": "refs/heads/main",
+  "before": "b977f0a11fd8bcb4707fe28cbbb091292e2d804d",
+  "after": "50135ccbcf6832602e2901afc681354344dbfc7c",
+  "created": false,
+  "deleted": false,
+  "forced": false,
+  "base_ref": null,
+  "commits": [
+    {
+      "id": "50135ccbcf6832602e2901afc681354344dbfc7c",
+      "tree_id": "d4830d2003febc23436dd2ccac19033af9ec78a1",
+      "distinct": true,
+      "message": "lorem ipsum dolor sit amet",
+      "timestamp": "2024-08-12T11:28:43+02:00",
+      "added": [],
+      "removed": [],
+      "modified": []
+    }
+  ],
+  "head_commit": {
+    "id": "50135ccbcf6832602e2901afc681354344dbfc7c",
+    "tree_id": "d4830d2003febc23436dd2ccac19033af9ec78a1",
+    "distinct": true,
+    "message": "lorem ipsum dolor sit amet",
+    "timestamp": "2024-08-12T11:28:43+02:00",
+    "added": [],
+    "removed": [],
+    "modified": []
+  }
+}

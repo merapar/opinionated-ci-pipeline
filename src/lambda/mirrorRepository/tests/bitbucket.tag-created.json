@@ -1,0 +1,26 @@
+{
+  "push": {
+    "changes": [
+      {
+        "old": null,
+        "new": {
+          "name": "v9.9.9",
+          "type": "tag",
+          "message": "a new tag\n",
+          "date": "2024-08-12T12:11:08+00:00",
+          "tagger": {},
+          "target": {
+            "type": "commit",
+            "hash": "04a611e54d5fc8dcf1d1b2b261bdbf8c060053c6",
+            "date": "2024-08-12T11:30:46+00:00",
+            "message": "lorem\n"
+          }
+        },
+        "truncated": false,
+        "created": true,
+        "forced": false,
+        "closed": false
+      }
+    ]
+  }
+}
