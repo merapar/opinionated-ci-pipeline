@@ -3,6 +3,9 @@ import {ComputeType, LinuxBuildImage} from 'aws-cdk-lib/aws-codebuild';
 import {IRole} from 'aws-cdk-lib/aws-iam';
 import {CodeBuildOptions, DockerCredential} from 'aws-cdk-lib/pipelines';
 import {Construct} from 'constructs';
+import {CIStackProps} from './ciStack';
+import {PartialDeep} from 'type-fest';
+import {Duration} from 'aws-cdk-lib/core';
 
 export interface ApplicationProps {
 
@@ -45,10 +48,10 @@ export interface ApplicationProps {
     readonly pipeline: (WaveDeployment | EnvironmentDeployment)[];
 
     /**
-     * Override CodeBuild properties, used for the main pipeline
+     * Override CodeBuild properties, used for the main pipeline Build step
      * as well as feature branch ephemeral environments deploys and destroys.
      *
-     * @default 30 minutes timeout, compute type MEDIUM with Linux build image Standard 6.0
+     * @default 1 hour timeout, compute type MEDIUM with Linux build image Standard 7.0
      */
     readonly codeBuild?: CodeBuildOptions;
 
@@ -232,12 +235,12 @@ export const defaultProps = {
         useChangeSets: false,
     },
     codeBuild: {
-        timeout: Duration.minutes(30),
+        timeout: Duration.hours(1),
         buildEnvironment: {
             computeType: ComputeType.MEDIUM,
             buildImage: LinuxBuildImage.STANDARD_7_0,
         },
     },
-}; // "satisfies PartialDeep<CIStackProps>" would be great here if jsii supported TypeScript 4.9 (PartialDeep from type-fest lib)
+} satisfies PartialDeep<CIStackProps>;
 
 export type ResolvedApplicationProps = ApplicationProps & typeof defaultProps;

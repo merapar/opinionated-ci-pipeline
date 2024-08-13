@@ -57,6 +57,7 @@
     "rimraf": "4.1.2",
     "source-map-support": "0.5.21",
     "standard-version": "9.5.0",
+    "type-fest": "4.24.0",
     "typescript": "5.5.4",
     "undici": "5.20.0"
   },
