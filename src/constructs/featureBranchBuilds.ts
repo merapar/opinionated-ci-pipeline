@@ -53,12 +53,8 @@ export class FeatureBranchBuilds extends Construct {
         const deployProject = new Project(this, 'DeployProject', {
             projectName: `${Stack.of(this).stackName}-featureBranch-deploy`,
             source,
-            timeout: codeBuild.timeout,
+            ...codeBuild,
             environment: codeBuild.buildEnvironment,
-            vpc: codeBuild.vpc,
-            securityGroups: codeBuild.securityGroups,
-            subnetSelection: codeBuild.subnetSelection,
-            cache: codeBuild.cache,
             buildSpec: BuildSpec.fromObject({
                 version: '0.2',
                 phases: {
@@ -124,12 +120,8 @@ export class FeatureBranchBuilds extends Construct {
         const destroyProject = new Project(this, 'DestroyProject', {
             projectName: `${Stack.of(this).stackName}-featureBranch-destroy`,
             source,
-            timeout: codeBuild.timeout,
+            ...codeBuild,
             environment: codeBuild.buildEnvironment,
-            vpc: codeBuild.vpc,
-            securityGroups: codeBuild.securityGroups,
-            subnetSelection: codeBuild.subnetSelection,
-            cache: codeBuild.cache,
             buildSpec: BuildSpec.fromObject({
                 version: '0.2',
                 phases: {

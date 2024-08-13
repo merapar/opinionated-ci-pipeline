@@ -1,13 +1,11 @@
 import * as targets from 'aws-cdk-lib/aws-events-targets';
 import {Construct} from 'constructs';
-import {
-    ApplicationProps, EnvironmentDeployment, IStacksCreation, ResolvedApplicationProps, WaveDeployment,
-} from '../applicationProps';
+import {ApplicationProps, EnvironmentDeployment, ResolvedApplicationProps, WaveDeployment} from '../applicationProps';
 import {CustomNodejsFunction} from './customNodejsFunction';
 import * as path from 'path';
 import {NotificationsTopic} from './notificationsTopic';
 import {
-    CodePipeline, CodePipelineProps, CodePipelineSource, ManualApprovalStep, ShellStep, Wave,
+    CodeBuildStep, CodePipeline, CodePipelineProps, CodePipelineSource, ManualApprovalStep, ShellStep, Wave,
 } from 'aws-cdk-lib/pipelines';
 import {merge} from 'lodash';
 import {getEnvironmentConfig, getProjectName} from '../util/context';
@@ -58,14 +56,14 @@ export class MainPipeline extends Construct {
                 primaryOutputDirectory: '../repository/' + (props.cdkOutputDirectory || 'cdk.out'),
             }),
             crossAccountKeys: true,
-            codeBuildDefaults: props.codeBuild,
+            synthCodeBuildDefaults: props.codeBuild,
         }, props.codePipeline));
 
         props.pipeline.forEach(step => {
             if (this.isWave(step)) {
-                this.addWaveDeployment(pipeline, step, props.stacks);
+                this.addWaveDeployment(pipeline, step, props);
             } else {
-                this.addEnvironmentDeployment(pipeline, step, props.stacks);
+                this.addEnvironmentDeployment(pipeline, step, props);
             }
         });
 
@@ -80,7 +78,7 @@ export class MainPipeline extends Construct {
         return 'wave' in waveOrEnvironment;
     }
 
-    private addWaveDeployment(pipeline: CodePipeline, step: WaveDeployment, stacks: IStacksCreation) {
+    private addWaveDeployment(pipeline: CodePipeline, step: WaveDeployment, props: MainPipelineProps) {
         const wave = pipeline.addWave(step.wave);
         step.environments.forEach(env => {
             const environmentDeployment: EnvironmentDeployment = {
@@ -95,35 +93,39 @@ export class MainPipeline extends Construct {
                 ],
             };
 
-            this.addEnvironmentDeployment(wave, environmentDeployment, stacks,
+            this.addEnvironmentDeployment(wave, environmentDeployment, props,
                 `Wave${capitalizeFirstLetter(step.wave)}`, {WAVE_NAME: step.wave});
         });
 
         if (step.pre && step.pre.length > 0) {
-            wave.addPre(new ShellStep(`PreWave${capitalizeFirstLetter(step.wave)}`, {
+            wave.addPre(new CodeBuildStep(`PreWave${capitalizeFirstLetter(step.wave)}`, {
                 env: {WAVE_NAME: step.wave},
                 commands: [
                     ...checkoutCommands,
                     ...step.pre,
                 ],
+                ...props.codeBuild,
+                rolePolicyStatements: props.codeBuild.rolePolicy,
             }));
         }
         if (step.post && step.post.length > 0) {
-            wave.addPost(new ShellStep(`PostWave${capitalizeFirstLetter(step.wave)}`, {
+            wave.addPost(new CodeBuildStep(`PostWave${capitalizeFirstLetter(step.wave)}`, {
                 env: {WAVE_NAME: step.wave},
                 commands: [
                     ...checkoutCommands,
                     ...step.post,
                 ],
+                ...props.codeBuild,
+                rolePolicyStatements: props.codeBuild.rolePolicy,
             }));
         }
     }
 
-    private addEnvironmentDeployment(parent: CodePipeline | Wave, step: EnvironmentDeployment, stacks: IStacksCreation, idPrefix = '', envVariables?: Record<string, string>) {
+    private addEnvironmentDeployment(parent: CodePipeline | Wave, step: EnvironmentDeployment, props: MainPipelineProps, idPrefix = '', envVariables?: Record<string, string>) {
         const stage = parent.addStage(new AppStage(this, `${idPrefix}DeployEnv${capitalizeFirstLetter(step.environment)}`, {
             envName: step.environment,
             env: getEnvironmentConfig(this, step.environment),
-            stacks,
+            stacks: props.stacks,
         }));
 
         if (step.manualApproval) {
@@ -135,7 +137,7 @@ export class MainPipeline extends Construct {
         }
 
         if (step.pre && step.pre.length > 0) {
-            stage.addPre(new ShellStep(`${idPrefix}PreEnv${capitalizeFirstLetter(step.environment)}`, {
+            stage.addPre(new CodeBuildStep(`${idPrefix}PreEnv${capitalizeFirstLetter(step.environment)}`, {
                 env: {
                     ...envVariables,
                     ENV_NAME: step.environment,
@@ -144,10 +146,12 @@ export class MainPipeline extends Construct {
                     ...checkoutCommands,
                     ...step.pre,
                 ],
+                ...props.codeBuild,
+                rolePolicyStatements: props.codeBuild.rolePolicy,
             }));
         }
         if (step.post && step.post.length > 0) {
-            stage.addPost(new ShellStep(`${idPrefix}PostEnv${capitalizeFirstLetter(step.environment)}`, {
+            stage.addPost(new CodeBuildStep(`${idPrefix}PostEnv${capitalizeFirstLetter(step.environment)}`, {
                 env: {
                     ...envVariables,
                     ENV_NAME: step.environment,
@@ -156,6 +160,8 @@ export class MainPipeline extends Construct {
                     ...checkoutCommands,
                     ...step.post,
                 ],
+                ...props.codeBuild,
+                rolePolicyStatements: props.codeBuild.rolePolicy,
             }));
         }
     }
