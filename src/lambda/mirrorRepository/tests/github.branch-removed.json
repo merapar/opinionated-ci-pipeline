@@ -1,0 +1,11 @@
+{
+  "ref": "refs/heads/test-1",
+  "before": "8610620cd9468e518cf629067d1429fa29173441",
+  "after": "0000000000000000000000000000000000000000",
+  "created": false,
+  "deleted": true,
+  "forced": false,
+  "base_ref": null,
+  "commits": [],
+  "head_commit": null
+}

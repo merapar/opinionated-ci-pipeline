@@ -1,0 +1,53 @@
+{
+  "push": {
+    "changes": [
+      {
+        "old": {
+          "name": "main",
+          "target": {
+            "type": "commit",
+            "hash": "48c72061eaea4e8cface6c2c3288b1b4b9862c53",
+            "date": "2024-08-12T11:28:56+00:00",
+            "message": "lorem\n"
+          }
+        },
+        "new": {
+          "name": "main",
+          "target": {
+            "type": "commit",
+            "hash": "04a611e54d5fc8dcf1d1b2b261bdbf8c060053c6",
+            "date": "2024-08-12T11:30:46+00:00",
+            "message": "[skip ci] dolor\n",
+            "rendered": {},
+            "properties": {}
+          },
+          "type": "branch"
+        },
+        "truncated": false,
+        "created": false,
+        "forced": false,
+        "closed": false,
+        "commits": [
+          {
+            "type": "commit",
+            "hash": "04a611e54d5fc8dcf1d1b2b261bdbf8c060053c6",
+            "date": "2024-08-12T11:30:46+00:00",
+            "message": "[skip ci] dolor\n"
+          },
+          {
+            "type": "commit",
+            "hash": "3c83a643e53b32fd0cfd773cfc73bda727059f84",
+            "date": "2024-08-12T11:30:34+00:00",
+            "message": "ipsum\n"
+          },
+          {
+            "type": "commit",
+            "hash": "94615b96741a9c94a8355c6619addc0a4e978d5a",
+            "date": "2024-08-12T11:30:29+00:00",
+            "message": "lorem\n"
+          }
+        ]
+      }
+    ]
+  }
+}

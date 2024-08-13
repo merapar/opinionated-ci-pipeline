@@ -4,6 +4,7 @@ import boto3
 import time
 import shutil
 import json
+from webhook_parser import WebhookParser
 
 secret = os.environ["SECRET"]
 source_repo_token_param = os.environ["SOURCE_REPO_TOKEN_PARAM"]
@@ -41,18 +42,25 @@ def handler(event, context):
         }
 
     print(event['body'])
-    body = json.loads(event['body'])
+    parser = WebhookParser.parse(source_repo_host, event['body'])
 
-    if not is_commit_or_branch_event(body):
+    if not parser.is_commit_or_branch_event():
         print("Not a commit or branch event, ignoring")
         return {
             "statusCode": 202,
             "body": "Not a commit or branch event, ignoring",
         }
 
-    branch_name = get_branch_name(body)
-    commit_sha = get_commit_sha(body)
-    branch_deleted = is_branch_deleted(body)
+    branch_name = parser.get_branch_name()
+    commit_sha = parser.get_commit_sha()
+    branch_deleted = parser.is_branch_deleted()
+
+    if not commit_sha and not branch_deleted:
+        print("Failed to resolve commit SHA, ignoring")
+        return {
+            "statusCode": 202,
+            "body": "Failed to resolve commit SHA, ignoring",
+        }
 
     if len(feature_branch_prefixes) > 0 and branch_name != default_branch_name and not branch_name.startswith(tuple(feature_branch_prefixes)):
         print("Feature branch not matching allowed prefix, ignoring")
@@ -109,6 +117,13 @@ def copy_repository(commit_sha):
         shell=True, check=True, text=True
     )
 
+    if commit_sha:
+        subprocess.run(
+            f"git update-ref HEAD {commit_sha}",
+            cwd="/tmp/repository",
+            shell=True, check=True, text=True
+        )
+
     shutil.make_archive("/tmp/repository-mirror", "zip", "/tmp/repository")
 
     put_response = boto3.client('s3').put_object(
@@ -121,49 +136,3 @@ def copy_repository(commit_sha):
     )
 
     return put_response["VersionId"]
-
-
-def is_commit_or_branch_event(body):
-    match source_repo_host:
-        case "github":
-            return body['ref'].startswith("refs/heads/")
-        case "bitbucket":
-            return any((change['new'] and change['new']['type'] == "branch") or change['closed'] == True for change in body['push']['changes'])
-        case _:
-            raise Exception("Unknown source repository host")
-
-
-def get_branch_name(body):
-    match source_repo_host:
-        case "github":
-            return body['ref'].removeprefix("refs/heads/")
-        case "bitbucket":
-            try:
-                return next(change['new']['name'] for change in body['push']['changes'] if change['new'] and change['new']['type'] == "branch")
-            except StopIteration:
-                return next(change['old']['name'] for change in body['push']['changes'] if change['closed'] == True)
-        case _:
-            raise Exception("Unknown source repository host")
-
-
-def is_branch_deleted(body):
-    match source_repo_host:
-        case "github":
-            return body['deleted']
-        case "bitbucket":
-            return any(change['closed'] == True for change in body['push']['changes'])
-        case _:
-            raise Exception("Unknown source repository host")
-
-
-def get_commit_sha(body):
-    match source_repo_host:
-        case "github":
-            return body['after']
-        case "bitbucket":
-            try:
-                return next(change['new']['target']['hash'] for change in body['push']['changes'] if change['new'] and change['new']['type'] == "branch")
-            except StopIteration:
-                return ''
-        case _:
-            raise Exception("Unknown source repository host")

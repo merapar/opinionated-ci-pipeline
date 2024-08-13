@@ -14,7 +14,8 @@ Features:
 - feature branch deployments to ephemeral environments,
 - development environments deployments from the local CLI,
 - build status notifications to repository commits,
-- build failures notifications to SNS.
+- build failures notifications to SNS,
+- supports commit message tags to skip deployments (`[skip ci]` or `[no ci]`).
 
 Currently supported source repositories are GitHub and Bitbucket.
 

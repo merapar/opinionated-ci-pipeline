@@ -1,0 +1,31 @@
+{
+  "ref": "refs/heads/test-1",
+  "before": "d4e86aaab6a00c4ed8fc936b78c22b521ffb5f4b",
+  "after": "07c3bff71fb095e94b271efac1875fb6b5673ad6",
+  "created": false,
+  "deleted": false,
+  "forced": false,
+  "base_ref": null,
+  "commits": [
+    {
+      "id": "07c3bff71fb095e94b271efac1875fb6b5673ad6",
+      "tree_id": "d4830d2003febc23436dd2ccac19033af9ec78a1",
+      "distinct": true,
+      "message": "new branch commit",
+      "timestamp": "2024-08-12T12:10:10+02:00",
+      "added": [],
+      "removed": [],
+      "modified": []
+    }
+  ],
+  "head_commit": {
+    "id": "07c3bff71fb095e94b271efac1875fb6b5673ad6",
+    "tree_id": "d4830d2003febc23436dd2ccac19033af9ec78a1",
+    "distinct": true,
+    "message": "new branch commit",
+    "timestamp": "2024-08-12T12:10:10+02:00",
+    "added": [],
+    "removed": [],
+    "modified": []
+  }
+}

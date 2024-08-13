@@ -1,0 +1,40 @@
+{
+  "push": {
+    "changes": [
+      {
+        "old": {
+          "name": "test-1",
+          "target": {
+            "type": "commit",
+            "hash": "04a611e54d5fc8dcf1d1b2b261bdbf8c060053c6",
+            "date": "2024-08-12T11:30:46+00:00",
+            "message": "[skip ci] dolor\n"
+          },
+          "type": "branch"
+        },
+        "new": {
+          "name": "test-1",
+          "target": {
+            "type": "commit",
+            "hash": "84845155a76bf913f78ad7699c83efbd79937d89",
+            "date": "2024-08-12T11:44:48+00:00",
+            "message": "some branch commit\n"
+          },
+          "type": "branch"
+        },
+        "truncated": false,
+        "created": false,
+        "forced": false,
+        "closed": false,
+        "commits": [
+          {
+            "type": "commit",
+            "hash": "84845155a76bf913f78ad7699c83efbd79937d89",
+            "date": "2024-08-12T11:44:48+00:00",
+            "message": "some branch commit\n"
+          }
+        ]
+      }
+    ]
+  }
+}

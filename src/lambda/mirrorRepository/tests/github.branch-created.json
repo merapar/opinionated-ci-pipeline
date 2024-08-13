@@ -1,0 +1,20 @@
+{
+  "ref": "refs/heads/test-1",
+  "before": "0000000000000000000000000000000000000000",
+  "after": "8610620cd9468e518cf629067d1429fa29173441",
+  "created": true,
+  "deleted": false,
+  "forced": false,
+  "base_ref": "refs/heads/main",
+  "commits": [],
+  "head_commit": {
+    "id": "8610620cd9468e518cf629067d1429fa29173441",
+    "tree_id": "d4830d2003febc23436dd2ccac19033af9ec78a1",
+    "distinct": true,
+    "message": "dolor",
+    "timestamp": "2024-08-12T11:32:38+02:00",
+    "added": [],
+    "removed": [],
+    "modified": []
+  }
+}
