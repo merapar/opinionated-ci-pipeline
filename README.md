@@ -257,11 +257,15 @@ Commands executed on particular builds:
     - `preInstall`
     - `install`
     - `buildAndTest`
+    - `preDeployEnvironment`
     - `deployEnvironment`
+    - `postDeployEnvironment`
 - feature branch environment destruction:
     - `preInstall`
     - `install`
+    - `preDestroyEnvironment`
     - `destroyEnvironment`
+    - `postDestroyEnvironment`
       </td>
       </tr>
       <tr>
