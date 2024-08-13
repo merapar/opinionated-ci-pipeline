@@ -263,8 +263,8 @@ export const defaultProps = {
     commands: {
         install: ['npm install --location=global aws-cdk@2'],
         synthPipeline: ['cdk synth -c ci=true'],
-        deployEnvironment: ['cdk deploy -c env=${ENV_NAME} --all'],
-        destroyEnvironment: ['yes | cdk destroy -c env=${ENV_NAME} --all'],
+        deployEnvironment: ['cdk deploy -c env=${ENV_NAME} --all --concurrency 5'],
+        destroyEnvironment: ['cdk destroy -c env=${ENV_NAME} --all --force'],
     },
     codePipeline: {
         useChangeSets: false,
