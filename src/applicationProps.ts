@@ -54,6 +54,8 @@ export interface ApplicationProps {
 
     /**
      * Override CodePipeline properties.
+     *
+     * @default Don't use change sets
      */
     readonly codePipeline?: CodePipelineOverrides;
 
@@ -225,6 +227,9 @@ export const defaultProps = {
         synthPipeline: ['cdk synth -c ci=true'],
         deployEnvironment: ['cdk deploy -c env=${ENV_NAME} --all'],
         destroyEnvironment: ['yes | cdk destroy -c env=${ENV_NAME} --all'],
+    },
+    codePipeline: {
+        useChangeSets: false,
     },
     codeBuild: {
         timeout: Duration.minutes(30),
