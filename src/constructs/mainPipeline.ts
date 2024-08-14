@@ -97,6 +97,14 @@ export class MainPipeline extends Construct {
                 `Wave${capitalizeFirstLetter(step.wave)}`, {WAVE_NAME: step.wave});
         });
 
+        if (step.manualApproval) {
+            wave.addPre(
+                new ManualApprovalStep(
+                    `Wave${capitalizeFirstLetter(step.wave)}ManualApproval`,
+                ),
+            );
+        }
+
         if (step.pre && step.pre.length > 0) {
             wave.addPre(new CodeBuildStep(`PreWave${capitalizeFirstLetter(step.wave)}`, {
                 env: {WAVE_NAME: step.wave},

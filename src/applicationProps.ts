@@ -165,6 +165,11 @@ export interface WaveDeployment {
     readonly environments: EnvironmentDeployment[];
 
     /**
+     * Flag indicating whether environment deployment requires manual approval.
+     */
+    readonly manualApproval?: boolean;
+
+    /**
      * Commands to execute before the wave deployment.
      */
     readonly pre?: string[];
