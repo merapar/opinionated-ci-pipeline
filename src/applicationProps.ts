@@ -2,7 +2,6 @@ import {ComputeType, LinuxBuildImage} from 'aws-cdk-lib/aws-codebuild';
 import {IRole} from 'aws-cdk-lib/aws-iam';
 import {CodeBuildOptions, DockerCredential} from 'aws-cdk-lib/pipelines';
 import {Construct} from 'constructs';
-import {CIStackProps} from './ciStack';
 import {PartialDeep} from 'type-fest';
 import {Duration} from 'aws-cdk-lib/core';
 
@@ -66,6 +65,19 @@ export interface ApplicationProps {
      * Requires configuring AWS Chatbot client manually first.
      */
     readonly slackNotifications?: SlackNotifications;
+
+    /**
+     * Whether to prefix the CI Stack Construct ID with the project name.
+     * Prefixing assures the ID is unique, required in projects deploying multiple CI Pipelines.
+     *
+     * No-prefixing is for backwards compatibility with existing projects,
+     * where changing the Construct ID of the CI Stack would change the Logical IDs of some constructs
+     * (like Lambda EventSourceMapping, API Gateway ApiMapping)
+     * causing CloudFormation to try re-creating them and fail.
+     *
+     * @default true
+     */
+    readonly prefixStackIdWithProjectName?: boolean;
 }
 
 /**
@@ -281,6 +293,7 @@ export const defaultProps = {
             buildImage: LinuxBuildImage.STANDARD_7_0,
         },
     },
-} satisfies PartialDeep<CIStackProps>;
+    prefixStackIdWithProjectName: true,
+} satisfies PartialDeep<ApplicationProps>;
 
 export type ResolvedApplicationProps = ApplicationProps & typeof defaultProps;

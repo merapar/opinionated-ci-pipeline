@@ -1,7 +1,8 @@
 import {App, AppProps} from 'aws-cdk-lib';
 import {CIStack} from './ciStack';
 import {getEnvironmentConfig, getProjectName} from './util/context';
-import {ApplicationProps} from './applicationProps';
+import {ApplicationProps, defaultProps, ResolvedApplicationProps} from './applicationProps';
+import {cloneDeep, defaultsDeep, merge} from 'lodash';
 
 export interface CDKApplicationProps extends AppProps, ApplicationProps {
 }
@@ -15,12 +16,15 @@ export class CDKApplication extends App {
 
         const projectName = getProjectName(this);
 
+        const resolvedProps = this.resolveProps(props);
+
         if (ci && ci.toLowerCase() === 'true') {
             const environment = getEnvironmentConfig(this, 'ci');
-            new CIStack(this, `${projectName}CI`, {
+            const stackId = resolvedProps.prefixStackIdWithProjectName ? `${projectName}CI` : 'CI';
+            new CIStack(this, stackId, {
                 stackName: `${projectName}-ci`,
                 env: environment,
-                ...props,
+                ...resolvedProps,
             });
         } else if (env) {
             props.stacks.create(this, projectName, env);
@@ -28,4 +32,27 @@ export class CDKApplication extends App {
             throw new Error('Either "env" or "ci" context value must be provided');
         }
     }
+
+    private resolveProps(props: ApplicationProps): ResolvedApplicationProps {
+        if (props.packageManager) {
+            merge(defaultProps, {commands: defaultCommands[props.packageManager]});
+        }
+
+        return defaultsDeep(cloneDeep(props), defaultProps) as ResolvedApplicationProps;
+    }
 }
+
+const defaultCommands: { [key in NonNullable<ApplicationProps['packageManager']>]: Exclude<ApplicationProps['commands'], undefined> } = {
+    npm: {
+        install: [
+            'npm install --location=global aws-cdk@2',
+            'npm ci',
+        ],
+    },
+    pnpm: {
+        install: [
+            'npm install --location=global aws-cdk@2 pnpm',
+            'pnpm install --frozen-lockfile',
+        ],
+    },
+};
