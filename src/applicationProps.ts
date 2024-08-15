@@ -62,6 +62,19 @@ export interface ApplicationProps {
      * Requires configuring AWS Chatbot client manually first.
      */
     readonly slackNotifications?: SlackNotifications;
+
+    /**
+     * Whether to prefix the CI Stack Construct ID with the project name.
+     * Prefixing assures the ID is unique, required in projects deploying multiple CI Pipelines.
+     *
+     * No-prefixing is for backwards compatibility with existing projects,
+     * where changing the Construct ID of the CI Stack would change the Logical IDs of some constructs
+     * (like Lambda EventSourceMapping, API Gateway ApiMapping)
+     * causing CloudFormation to try re-creating them and fail.
+     *
+     * @default true
+     */
+    readonly prefixStackIdWithProjectName?: boolean;
 }
 
 /**
@@ -233,6 +246,7 @@ export const defaultProps = {
             buildImage: LinuxBuildImage.STANDARD_7_0,
         },
     },
+    prefixStackIdWithProjectName: true,
 }; // "satisfies PartialDeep<CIStackProps>" would be great here if jsii supported TypeScript 4.9 (PartialDeep from type-fest lib)
 
 export type ResolvedApplicationProps = ApplicationProps & typeof defaultProps;

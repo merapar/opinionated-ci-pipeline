@@ -34,8 +34,4 @@ new CDKApplication({
         useChangeSets: false,
         selfMutation: false,
     },
-    slackNotifications: {
-        workspaceId: 'T0D4SS2Q1',
-        channelId: 'C04S33E0G8Y',
-    },
 });
