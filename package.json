@@ -1,6 +1,6 @@
 {
   "name": "opinionated-ci-pipeline",
-  "version": "4.0.0-beta.0",
+  "version": "4.0.0-beta.1",
   "description": "CI/CD on AWS with feature-branch builds, developer-environment deployments, and build status notifications.",
   "keywords": [
     "aws",
