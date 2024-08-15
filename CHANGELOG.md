@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.2.0-beta.1](https://github.com/merapar/opinionated-ci-pipeline/compare/v3.2.0-beta.0...v3.2.0-beta.1) (2024-08-15)
+
+
+### Features
+
+* add prefixStackIdWithProjectName for backwards compatibility with 2.x pipeline ([55f205c](https://github.com/merapar/opinionated-ci-pipeline/commit/55f205cc2728d2c1292c8fcf9b30abdd2904610a))
+
 ## [3.2.0-beta.0](https://github.com/merapar/opinionated-ci-pipeline/compare/v3.1.0...v3.2.0-beta.0) (2024-08-08)
 
 
