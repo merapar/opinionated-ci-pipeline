@@ -36,7 +36,7 @@ export class MainPipeline extends Construct {
     constructor(scope: Construct, id: string, props: MainPipelineProps) {
         super(scope, id);
 
-        const source = CodePipelineSource.s3(props.sourceBucket, 'repository-mirror.zip', {
+        const source = CodePipelineSource.s3(props.sourceBucket, `repository-${props.repository.defaultBranch}.zip`, {
             trigger: S3Trigger.NONE,
         });
 

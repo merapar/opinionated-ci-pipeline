@@ -28,31 +28,29 @@ export class FeatureBranchBuilds extends Construct {
     constructor(scope: Construct, id: string, props: FeatureBranchBuildsProps) {
         super(scope, id);
 
-        const source = Source.s3({
-            bucket: props.sourceBucket,
-            path: 'repository-mirror.zip',
-        });
-
         const deployProject = this.createDeployProject(
-            source, props.codeBuild, props.commands,
+            props.sourceBucket, props.codeBuild, props.commands,
         );
         this.createDeployNotifications(deployProject, props.repository, props.repositoryTokenParam);
 
         this.failuresTopic = this.createBuildFailuresTopic(deployProject);
 
         this.createDestroyProject(
-            source, props.codeBuild, props.commands,
+            props.sourceBucket, props.repository.defaultBranch, props.codeBuild, props.commands,
         );
     }
 
     private createDeployProject(
-        source: Source,
+        sourceBucket: s3.IBucket,
         codeBuild: FeatureBranchBuildsProps['codeBuild'],
         commands: FeatureBranchBuildsProps['commands'],
     ): Project {
         const deployProject = new Project(this, 'DeployProject', {
             projectName: `${Stack.of(this).stackName}-featureBranch-deploy`,
-            source,
+            source: Source.s3({
+                bucket: sourceBucket,
+                path: 'repository-file-placeholder-to-override.zip',
+            }),
             ...codeBuild,
             environment: codeBuild.buildEnvironment,
             buildSpec: BuildSpec.fromObject({
@@ -80,6 +78,7 @@ export class FeatureBranchBuilds extends Construct {
         });
 
         codeBuild.rolePolicy?.forEach(policy => deployProject.addToRolePolicy(policy));
+        sourceBucket.grantRead(deployProject);
         this.grantAssumeCDKRoles(deployProject);
 
         return deployProject;
@@ -115,13 +114,17 @@ export class FeatureBranchBuilds extends Construct {
     }
 
     private createDestroyProject(
-        source: Source,
+        sourceBucket: s3.IBucket,
+        defaultBranchName: string,
         codeBuild: FeatureBranchBuildsProps['codeBuild'],
         commands: FeatureBranchBuildsProps['commands'],
     ): Project {
         const destroyProject = new Project(this, 'DestroyProject', {
             projectName: `${Stack.of(this).stackName}-featureBranch-destroy`,
-            source,
+            source: Source.s3({
+                bucket: sourceBucket,
+                path: `repository-${defaultBranchName}.zip`,
+            }),
             ...codeBuild,
             environment: codeBuild.buildEnvironment,
             buildSpec: BuildSpec.fromObject({
@@ -147,6 +150,7 @@ export class FeatureBranchBuilds extends Construct {
         });
 
         codeBuild.rolePolicy?.forEach(policy => destroyProject.addToRolePolicy(policy));
+        sourceBucket.grantRead(destroyProject);
         this.grantAssumeCDKRoles(destroyProject);
 
         return destroyProject;

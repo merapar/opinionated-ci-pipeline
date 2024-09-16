@@ -72,18 +72,26 @@ def handler(event, context):
     version_id = ''
     if not branch_deleted:
         print("Copying repository")
-        version_id = copy_repository(commit_sha)
+        version_id = copy_repository(commit_sha, branch_name)
 
     if branch_name == default_branch_name:
+        if branch_deleted:
+            print("Default branch deleted, ignoring")
+            return {
+                "statusCode": 202,
+                "body": "Default branch deleted, ignoring",
+            }
+
         print("Starting main pipeline execution")
         boto3.client('codepipeline').start_pipeline_execution(
             name=main_pipeline_name,
         )
     else:
         project_name = branch_destroy_project_name if branch_deleted else branch_deploy_project_name
-        print(f"Starting {project_name} build")
+        print(f"Starting {project_name} build for branch {branch_name}")
         boto3.client('codebuild').start_build(
             projectName=project_name,
+            sourceLocationOverride=f"{bucket_name}/repository-{branch_name}.zip",
             sourceVersion=version_id,
             environmentVariablesOverride=[
                 {
@@ -104,7 +112,7 @@ def handler(event, context):
     }
 
 
-def copy_repository(commit_sha):
+def copy_repository(commit_sha, branch_name):
     subprocess.run(
         "rm -rf *",
         cwd="/tmp",
@@ -128,7 +136,7 @@ def copy_repository(commit_sha):
 
     put_response = boto3.client('s3').put_object(
         Bucket=bucket_name,
-        Key="repository-mirror.zip",
+        Key=f"repository-{branch_name}.zip",
         Body=open("/tmp/repository-mirror.zip", "rb"),
         Metadata={
             "commit-sha": commit_sha,
