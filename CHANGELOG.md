@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [4.0.1-beta.0](https://github.com/merapar/opinionated-ci-pipeline/compare/v4.0.0...v4.0.1-beta.0) (2024-09-16)
+
+
+### Bug Fixes
+
+* separate repo mirror zips per branch ([#14](https://github.com/merapar/opinionated-ci-pipeline/issues/14)) ([e978055](https://github.com/merapar/opinionated-ci-pipeline/commit/e978055d2a74d0c9dcdf680d85b122228d6d7ab0))
+
 ## [4.0.0](https://github.com/merapar/opinionated-ci-pipeline/compare/v4.0.0-beta.1...v4.0.0) (2024-08-30)
 
 ## [4.0.0-beta.1](https://github.com/merapar/opinionated-ci-pipeline/compare/v4.0.0-beta.0...v4.0.0-beta.1) (2024-08-15)
