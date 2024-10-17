@@ -1,7 +1,7 @@
 import {ApplicationProps, ResolvedApplicationProps} from '../applicationProps';
 import {Construct} from 'constructs';
-import {IStringParameter} from 'aws-cdk-lib/aws-ssm';
-import {CustomResource, Duration, Fn, RemovalPolicy, Stack} from 'aws-cdk-lib';
+import {IStringParameter, StringParameter} from 'aws-cdk-lib/aws-ssm';
+import {CfnOutput, CustomResource, Duration, Fn, RemovalPolicy, Stack} from 'aws-cdk-lib';
 import {CustomNodejsFunction} from './customNodejsFunction';
 import {Code, Function as LambdaFunction, FunctionUrlAuthType, LayerVersion, Runtime} from 'aws-cdk-lib/aws-lambda';
 import * as path from 'path';
@@ -10,6 +10,7 @@ import {RetentionDays} from 'aws-cdk-lib/aws-logs';
 import {AwsCliLayer} from 'aws-cdk-lib/lambda-layer-awscli';
 import {PolicyStatement} from 'aws-cdk-lib/aws-iam';
 import * as s3 from 'aws-cdk-lib/aws-s3';
+import {getProjectName} from '../util/context';
 
 export interface MirrorRepositoryProps extends Pick<ResolvedApplicationProps, 'repository'> {
     repoTokenParam: IStringParameter;
@@ -24,7 +25,17 @@ export class MirrorRepository extends Construct {
 
         const webhookSecret = Fn.select(2, Fn.split('/', Stack.of(this).stackId));
 
-        this.sourceBucket = new s3.Bucket(this, 'SourceBucket', {
+        this.sourceBucket = this.createSourceBucket();
+
+        const {
+            triggerMirrorFunctionUrl,
+        } = this.createRepositoryMirroring(webhookSecret, props.repoTokenParam, props.repository, this.sourceBucket);
+
+        this.createWebhook(props.repoTokenParam, props.repository, triggerMirrorFunctionUrl);
+    }
+
+    private createSourceBucket() {
+        const bucket = new s3.Bucket(this, 'SourceBucket', {
             enforceSSL: true,
             removalPolicy: RemovalPolicy.DESTROY,
             blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
@@ -38,11 +49,17 @@ export class MirrorRepository extends Construct {
             ],
         });
 
-        const {
-            triggerMirrorFunctionUrl,
-        } = this.createRepositoryMirroring(webhookSecret, props.repoTokenParam, props.repository, this.sourceBucket);
+        new StringParameter(this, 'SourceBucketNameParam', {
+            parameterName: `/${getProjectName(this)}/ci/sourceBucketName`,
+            stringValue: bucket.bucketName,
+        });
 
-        this.createWebhook(props.repoTokenParam, props.repository, triggerMirrorFunctionUrl);
+        new CfnOutput(this, 'SourceBucketName', {
+            value: bucket.bucketName,
+            exportName: `${getProjectName(this)}-ci-sourceBucketName`,
+        });
+
+        return bucket;
     }
 
     private createRepositoryMirroring(
