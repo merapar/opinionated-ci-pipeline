@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [4.2.0-beta.1](https://github.com/merapar/opinionated-ci-pipeline/compare/v4.2.0-beta.0...v4.2.0-beta.1) (2024-10-21)
+
+
+### Bug Fixes
+
+* apply FixPathsMetadataAspect to AppStage used in the CI ([feed0ab](https://github.com/merapar/opinionated-ci-pipeline/commit/feed0ab0e4413f7199f2bc03de464023707de288))
+
 ## [4.2.0-beta.0](https://github.com/merapar/opinionated-ci-pipeline/compare/v4.1.0...v4.2.0-beta.0) (2024-10-21)
 
 
