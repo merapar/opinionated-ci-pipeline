@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [4.2.0](https://github.com/merapar/opinionated-ci-pipeline/compare/v4.2.0-beta.1...v4.2.0) (2024-10-21)
+
+
+### Bug Fixes
+
+* base fixing path metadata on existing paths ([cc2b037](https://github.com/merapar/opinionated-ci-pipeline/commit/cc2b037fd5db927d32b8dd0780a2b6e9da40fdc3))
+
 ## [4.2.0-beta.1](https://github.com/merapar/opinionated-ci-pipeline/compare/v4.2.0-beta.0...v4.2.0-beta.1) (2024-10-21)
 
 
