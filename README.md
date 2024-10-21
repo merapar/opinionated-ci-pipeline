@@ -315,6 +315,16 @@ Configuration for Slack notifications.
 Requires configuring AWS Chatbot client manually first.
 </td>
       </tr>
+      <tr>
+          <td>fixPathsMetadata</td>
+          <td>boolean</td>
+          <td>
+
+Whether to remove the CI resources
+from the beginning of the `aws:cdk:path` metadata
+when deploying from the main pipeline.
+</td>
+      </tr>
 </table>
 
 ## Notifications and alarms
