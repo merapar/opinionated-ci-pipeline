@@ -91,6 +91,8 @@ export interface ApplicationProps {
      * This DOES NOT change the paths themselves, only the metadata.
      * The resources that use the full path in their logical IDs
      * (like the `EventSourceMapping` created with `lambda.addEventSource()`) will still change.
+     *
+     * @default false
      */
     readonly fixPathsMetadata?: boolean;
 }

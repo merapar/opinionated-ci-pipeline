@@ -23,7 +23,8 @@ import {checkoutCommands} from '../util/checkout';
 
 export interface MainPipelineProps extends Pick<ResolvedApplicationProps,
     'stacks' | 'repository' | 'commands' |
-    'pipeline' | 'cdkOutputDirectory' | 'codeBuild' | 'codePipeline'
+    'pipeline' | 'cdkOutputDirectory' | 'codeBuild' | 'codePipeline' |
+    'fixPathsMetadata'
 > {
     sourceBucket: s3.IBucket;
     repositoryTokenParam: IStringParameter;
@@ -134,6 +135,7 @@ export class MainPipeline extends Construct {
             envName: step.environment,
             env: getEnvironmentConfig(this, step.environment),
             stacks: props.stacks,
+            fixPathsMetadata: props.fixPathsMetadata,
         }));
 
         if (step.manualApproval) {
