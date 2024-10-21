@@ -1,8 +1,9 @@
-import {App, AppProps} from 'aws-cdk-lib';
+import {App, AppProps, Aspects} from 'aws-cdk-lib';
 import {CIStack} from './ciStack';
 import {getEnvironmentConfig, getProjectName} from './util/context';
 import {ApplicationProps, defaultProps, ResolvedApplicationProps} from './applicationProps';
 import {cloneDeep, defaultsDeep, merge} from 'lodash';
+import {FixPathsMetadataAspect} from './fixPathsMetadataAspect';
 
 export interface CDKApplicationProps extends AppProps, ApplicationProps {
 }
@@ -30,6 +31,10 @@ export class CDKApplication extends App {
             props.stacks.create(this, projectName, env);
         } else {
             throw new Error('Either "env" or "ci" context value must be provided');
+        }
+
+        if (resolvedProps.fixPathsMetadata) {
+            Aspects.of(this).add(new FixPathsMetadataAspect());
         }
     }
 

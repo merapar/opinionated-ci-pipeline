@@ -78,6 +78,21 @@ export interface ApplicationProps {
      * @default true
      */
     readonly prefixStackIdWithProjectName?: boolean;
+
+    /**
+     * Whether to remove the CI resources from the beginning of the aws:cdk:path metadata.
+     *
+     * Enabling it results in the same tree view in the CloudFormation Console as with manual deployment though the CLI.
+     * Without it, the tree view for the stacks deployed through the CI starts with the 3 extra levels.
+     *
+     * This also prevents updating all resources just to change their metadata
+     * when deploying the stack alternately from the CI and CLI.
+     *
+     * This DOES NOT change the paths themselves, only the metadata.
+     * The resources that use the full path in their logical IDs
+     * (like the `EventSourceMapping` created with `lambda.addEventSource()`) will still change.
+     */
+    readonly fixPathsMetadata?: boolean;
 }
 
 /**
