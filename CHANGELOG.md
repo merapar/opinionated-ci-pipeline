@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [4.2.0-beta.0](https://github.com/merapar/opinionated-ci-pipeline/compare/v4.1.0...v4.2.0-beta.0) (2024-10-21)
+
+
+### Features
+
+* flag to unify paths metadata between CI and CLI deployed stacks ([4aa4681](https://github.com/merapar/opinionated-ci-pipeline/commit/4aa4681505647b8f7cc97569c3d771020ad095b1))
+
 ## [4.1.0](https://github.com/merapar/opinionated-ci-pipeline/compare/v4.1.0-beta.0...v4.1.0) (2024-10-17)
 
 ## [4.1.0-beta.0](https://github.com/merapar/opinionated-ci-pipeline/compare/v4.0.1...v4.1.0-beta.0) (2024-10-17)
