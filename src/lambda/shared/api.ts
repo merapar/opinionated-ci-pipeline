@@ -34,3 +34,13 @@ export const bitbucketApiCall = async (token: string, path: string, method: stri
         body: body ? JSON.stringify(body) : undefined,
     });
 };
+
+export const gitlabApiCall = async (token: string, path: string, method: string, body?: object) => {
+    return await fetch(`https://gitlab.com/api/v4/${path}`, {
+        method,
+        headers: {
+            'PRIVATE-TOKEN': token,
+        },
+        body: body ? JSON.stringify(body) : undefined,
+    });
+};

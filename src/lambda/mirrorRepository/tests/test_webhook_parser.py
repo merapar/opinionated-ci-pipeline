@@ -23,6 +23,12 @@ class TestWebhookParser(unittest.TestCase):
             "github.branch-created.json": True,
             "github.branch-commit.json": True,
             "github.branch-removed.json": True,
+
+            "gitlab.main-commit.json": True,
+            "gitlab.main-multiple-commits.json": True,
+            "gitlab.branch-commit.json": True,
+            "gitlab.branch-created.json": True,
+            "gitlab.branch-removed.json": True,
         })
 
     def test_get_branch_name(self):
@@ -38,6 +44,12 @@ class TestWebhookParser(unittest.TestCase):
             "github.branch-created.json": "test-1",
             "github.branch-commit.json": "test-1",
             "github.branch-removed.json": "test-1",
+
+            "gitlab.main-commit.json": "main",
+            "gitlab.main-multiple-commits.json": "main",
+            "gitlab.branch-commit.json": "test-1",
+            "gitlab.branch-created.json": "test-1",
+            "gitlab.branch-removed.json": "test-1",
         })
 
     def test_is_branch_deleted(self):
@@ -53,6 +65,12 @@ class TestWebhookParser(unittest.TestCase):
             "github.branch-created.json": False,
             "github.branch-commit.json": False,
             "github.branch-removed.json": True,
+
+            "gitlab.main-commit.json": False,
+            "gitlab.main-multiple-commits.json": False,
+            "gitlab.branch-commit.json": False,
+            "gitlab.branch-created.json": False,
+            "gitlab.branch-removed.json": True,
         })
 
     def test_get_commit_sha(self):
@@ -68,6 +86,12 @@ class TestWebhookParser(unittest.TestCase):
             "github.branch-created.json": "8610620cd9468e518cf629067d1429fa29173441",
             "github.branch-commit.json": "07c3bff71fb095e94b271efac1875fb6b5673ad6",
             "github.branch-removed.json": "",
+
+            "gitlab.main-commit.json": "da1560886d4f094c3e6c9ef40349f7d38b5d27d7",
+            "gitlab.main-multiple-commits.json": "da1560886d4f094c3e6c9ef40349f7d38b5d27d7",
+            "gitlab.branch-commit.json": "da1560886d4f094c3e6c9ef40349f7d38b5d27d7",
+            "gitlab.branch-created.json": "b6568db1bc1dcd7f8b4d5a946b0b91f9dacd7327",
+            "gitlab.branch-removed.json": "",
         })
 
 if __name__ == '__main__':

@@ -1,4 +1,4 @@
-import {bitbucketApiCall, githubApiCall} from './api';
+import {bitbucketApiCall, githubApiCall, gitlabApiCall} from './api';
 import {createHash} from 'crypto';
 
 export const sendCommitStatus = async (
@@ -10,6 +10,8 @@ export const sendCommitStatus = async (
         return await sendGitHubCommitStatus(repositoryName, token, status, commitSha, buildName, buildUrl);
     case 'bitbucket':
         return await sendBitbucketCommitStatus(repositoryName, token, status, commitSha, buildName, buildUrl, description);
+    case 'gitlab':
+        return await sendGitlabCommitStatus(repositoryName, token, status, commitSha, buildName, buildUrl, description);
     default:
         throw new Error(`Unsupported repository host to send commit status to: ${repositoryHost}`);
     }
@@ -43,5 +45,17 @@ const sendBitbucketCommitStatus = async (
     });
     if (response.status >= 300) {
         throw new Error(`Failed to send status to Bitbucket. Status: ${response.status}, response: ${await response.text()}`);
+    }
+};
+
+const sendGitlabCommitStatus = async (
+    repositoryName: string, token: string,
+    status: string, commitSha: string, buildName: string, buildUrl: string, description: string,
+) => {
+
+    const queryParams = `state=${status}&description=${description}&target_url=${buildUrl}&name=${buildName}`;
+    const response = await gitlabApiCall(token, `projects/${repositoryName}/statuses/${commitSha}?${queryParams}`, 'POST');
+    if (response.status >= 300) {
+        throw new Error(`Failed to send status to Gitlab. Status: ${response.status}, response: ${await response.text()}`);
     }
 };

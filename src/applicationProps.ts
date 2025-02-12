@@ -119,7 +119,7 @@ export interface RepositoryProps {
     /**
      * Repository hosting.
      */
-    readonly host: 'github' | 'bitbucket';
+    readonly host: 'github' | 'bitbucket' | 'gitlab';
 
     /** Like "my-comapny/my-repo". */
     readonly name: string;

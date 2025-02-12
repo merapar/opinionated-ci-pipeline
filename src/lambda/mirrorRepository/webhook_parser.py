@@ -11,6 +11,8 @@ class WebhookParser(ABC):
                 return GitHubWebhookParser(body)
             case "bitbucket":
                 return BitbucketWebhookParser(body)
+            case "gitlab":
+                return GitlabWebhookParser(body)
             case _:
                 raise Exception("Unknown source repository host")
 
@@ -82,4 +84,28 @@ class BitbucketWebhookParser(WebhookParser):
             return next(commit['hash'] for commit in commits if not WebhookParser._skip_ci(commit['message']))
         except StopIteration:
             return ''
+
+class GitlabWebhookParser(WebhookParser):
+    def __init__(self, body):
+        super().__init__(body)
+
+    def is_commit_or_branch_event(self):
+        return self.body['ref'].startswith("refs/heads/")
+
+    def get_branch_name(self):
+        return self.body['ref'].removeprefix("refs/heads/")
+
+    def is_branch_deleted(self):
+        branch_deleted_sha = "0000000000000000000000000000000000000000"
+        return (
+            self.body['after'] == branch_deleted_sha or 
+            self.body['checkout_sha'] is None or 
+            'deleted' in self.body['ref']
+        )
+    def get_commit_sha(self):
+        commits = [commit['id'] for commit in self.body['commits'] if not WebhookParser._skip_ci(commit['message'])]
+        if commits:
+            return commits[-1]
+        if self.body['after'] != "0000000000000000000000000000000000000000":
+            return self.body['after']
         return ''

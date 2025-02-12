@@ -1,4 +1,4 @@
-import {bitbucketApiCall, githubApiCall} from '../shared/api';
+import {bitbucketApiCall, githubApiCall, gitlabApiCall} from '../shared/api';
 import {Logger} from '@aws-lambda-powertools/logger';
 
 const logger = new Logger();
@@ -9,6 +9,8 @@ export const deleteWebhook = async (repositoryHost: string, repositoryToken: str
         return deleteGitHubWebhook(repositoryToken, repositoryName, webhookId);
     case 'bitbucket':
         return deleteBitbucketWebhook(repositoryToken, repositoryName, webhookId);
+    case 'gitlab':
+        return deleteGitlabWebhook(repositoryToken, repositoryName, webhookId);
     default:
         throw new Error(`Unsupported repository host: ${repositoryHost}`);
     }
@@ -35,5 +37,17 @@ const deleteBitbucketWebhook = async (repositoryToken: string, repositoryName: s
         logger.info('Webhook not found', {webhookId});
     } else {
         throw new Error(`Unable to delete Bitbucket webhook. Status: ${response.status}, response: ${await response.text()}`);
+    }
+};
+
+const deleteGitlabWebhook = async (repositoryToken: string, repositoryName: string, webhookId: string) => {
+    const response = await gitlabApiCall(repositoryToken, `projects/${repositoryName}/hooks/${webhookId}`, 'DELETE');
+
+    if (response.status === 204) {
+        logger.info('Webhook deleted', {webhookId});
+    } else if (response.status == 404) {
+        logger.info('Webhook not found', {webhookId});
+    } else {
+        throw new Error(`Unable to delete Gitlab webhook. Status: ${response.status}, response: ${await response.text()}`);
     }
 };

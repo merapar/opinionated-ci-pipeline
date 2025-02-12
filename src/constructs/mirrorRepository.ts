@@ -68,7 +68,12 @@ export class MirrorRepository extends Construct {
         repository: ApplicationProps['repository'],
         bucket: s3.IBucket,
     ) {
-        const sourceRepositoryDomain = repository.host === 'github' ? 'github.com' : 'bitbucket.org';
+        const repositoryDomainMapping = {
+            github: 'github.com',
+            bitbucket: 'bitbucket.org',
+            gitlab: 'gitlab.com',
+        };
+        const sourceRepositoryDomain = repositoryDomainMapping[repository.host];
 
         const mirrorFunction = new LambdaFunction(this, 'RepositoryMirroring', {
             runtime: Runtime.PYTHON_3_11, // AwsCliLayer requires Python function

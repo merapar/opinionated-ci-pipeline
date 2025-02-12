@@ -1,4 +1,4 @@
-import {bitbucketApiCall, githubApiCall} from '../shared/api';
+import {bitbucketApiCall, githubApiCall, gitlabApiCall} from '../shared/api';
 
 export const createWebhook = async (repositoryHost: string, repositoryToken: string, repositoryName: string, webhookUrl: string, description: string): Promise<string> => {
     switch (repositoryHost.toLowerCase()) {
@@ -6,6 +6,8 @@ export const createWebhook = async (repositoryHost: string, repositoryToken: str
         return createGitHubWebhook(repositoryToken, repositoryName, webhookUrl);
     case 'bitbucket':
         return createBitbucketWebhook(repositoryToken, repositoryName, webhookUrl, description);
+    case 'gitlab':
+        return createGitlabWebhook(repositoryToken, repositoryName, webhookUrl, description);
     default:
         throw new Error(`Unsupported repository host: ${repositoryHost}`);
     }
@@ -42,4 +44,18 @@ const createBitbucketWebhook = async (repositoryToken: string, repositoryName: s
     }
 
     throw new Error(`Unable to create Bitbucket webhook. Status: ${response.status}, response: ${await response.text()}`);
+};
+
+const createGitlabWebhook = async (repositoryToken: string, repositoryName: string, webhookUrl: string, description: string): Promise<string> => {
+    const response = await gitlabApiCall(repositoryToken, `projects/${repositoryName}/hooks`, 'POST', {
+        url: webhookUrl,
+        push_events: true,
+        description,
+    });
+
+    if (response.status === 201) {
+        return ((await response.json()) as Record<string, string>).id.toString();
+    }
+
+    throw new Error(`Unable to create Gitlab webhook. Status: ${response.status}, response: ${await response.text()}`);
 };

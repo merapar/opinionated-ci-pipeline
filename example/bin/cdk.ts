@@ -3,15 +3,18 @@ import 'source-map-support/register';
 import {ExampleStack} from '../src/exampleStack';
 import {CDKApplication} from 'opinionated-cdk-pipeline';
 
+// eslint-disable-next-line @typescript-eslint/no-unsafe-call
 new CDKApplication({
     stacks: {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
         create: (scope, projectName, envName) => {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
             new ExampleStack(scope, 'ExampleStack', {stackName: `${projectName}-${envName}-ExampleStack`});
         },
     },
     repository: {
-        host: 'github',
-        name: 'merapar/opinionated-ci-pipeline',
+        host: 'gitlab',
+        name: '',
     },
     packageManager: 'pnpm',
     commands: {

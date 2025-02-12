@@ -8,6 +8,8 @@ export const transformStatusName = (repositoryType: string, status: string): str
         return transformStatusNameForGitHub(status);
     case 'bitbucket':
         return transformStatusNameForBitbucket(status);
+    case 'gitlab':
+        return transformStatusNameForGitlab(status);
     default:
         return null;
     }
@@ -40,6 +42,22 @@ const transformStatusNameForBitbucket = (status: string): string | null => {
         return status;
     case 'STOPPED':
         return status;
+    default:
+        return null;
+    }
+};
+
+const transformStatusNameForGitlab = (status: string): string | null => {
+    switch (status) {
+    case 'STARTED': // CodePipeline
+    case 'IN_PROGRESS': // CodeBuild
+        return 'running';
+    case 'SUCCEEDED':
+        return 'success';
+    case 'FAILED':
+        return 'failed';
+    case 'STOPPED':
+        return 'canceled';
     default:
         return null;
     }
