@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [4.3.0-beta.0](https://github.com/merapar/opinionated-ci-pipeline/compare/v4.2.0...v4.3.0-beta.0) (2025-07-01)
+
+
+### Features
+
+* update lambdas Nodejs version ([861e8db](https://github.com/merapar/opinionated-ci-pipeline/commit/861e8dbe6601a3567ba90ead7b1b99d5309e92b7))
+
+
+### Bug Fixes
+
+* update webhook description ([d35238d](https://github.com/merapar/opinionated-ci-pipeline/commit/d35238dc4ecf3c643b9d5a18704b4bfe553a57b4)), closes [#17](https://github.com/merapar/opinionated-ci-pipeline/issues/17)
+
 ## [4.2.0](https://github.com/merapar/opinionated-ci-pipeline/compare/v4.2.0-beta.1...v4.2.0) (2024-10-21)
 
 
