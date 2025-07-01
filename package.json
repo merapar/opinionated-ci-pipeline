@@ -47,11 +47,11 @@
     "@typescript-eslint/parser": "8.0.1",
     "aws-cdk-lib": "2.151.0",
     "constructs": "10.0.0",
-    "esbuild": "0.17.11",
+    "esbuild": "0.25.5",
     "eslint": "8.57.0",
     "husky": "^8.0.0",
-    "jsii": "5.4.31",
-    "jsii-pacmak": "1.102.0",
+    "jsii": "5.8.13",
+    "jsii-pacmak": "1.112.0",
     "lint-staged": "13.1.2",
     "publib": "0.2.606",
     "rimraf": "4.1.2",
@@ -59,7 +59,7 @@
     "standard-version": "9.5.0",
     "type-fest": "4.24.0",
     "typescript": "5.5.4",
-    "undici": "5.20.0"
+    "undici": "7.11.0"
   },
   "lint-staged": {
     "*.ts": "eslint --max-warnings=0"
