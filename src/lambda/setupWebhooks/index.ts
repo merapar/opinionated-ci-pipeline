@@ -28,7 +28,7 @@ export const handler = async (event: CloudFormationCustomResourceEvent): Promise
 const onCreate = async (properties: Properties, repositoryToken: string): Promise<Result> => {
     logger.info('Creating webhook');
 
-    const webhookId = await createWebhook(properties.RepositoryHost, repositoryToken, properties.RepositoryName, properties.WebhookUrl, `${properties.StackName} Mirror to AWS CodeCommit`);
+    const webhookId = await createWebhook(properties.RepositoryHost, repositoryToken, properties.RepositoryName, properties.WebhookUrl, `${properties.StackName} Mirror to AWS S3 Bucket`);
     logger.info('Webhook created', {webhookId});
 
     return {
