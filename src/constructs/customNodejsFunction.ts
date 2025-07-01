@@ -12,7 +12,7 @@ export class CustomNodejsFunction extends LambdaFunction {
 
     constructor(scope: Construct, id: string, props: CustomNodejsFunctionProps) {
         super(scope, id, {
-            runtime: Runtime.NODEJS_18_X,
+            runtime: new Runtime('nodejs22.x'), // define manually to not bump the required CDK version
             handler: 'index.handler',
             logRetention: RetentionDays.ONE_MONTH,
             ...props,
