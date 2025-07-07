@@ -9,6 +9,7 @@ import {HeadObjectCommand, S3Client} from '@aws-sdk/client-s3';
 const REPOSITORY_HOST = process.env.REPOSITORY_HOST || '';
 const REPOSITORY_NAME = process.env.REPOSITORY_NAME || '';
 const REPOSITORY_TOKEN_PARAM_NAME = process.env.REPOSITORY_TOKEN_PARAM_NAME || '';
+const DEFAULT_BRANCH_NAME = process.env.DEFAULT_BRANCH_NAME || '';
 const REGION = process.env.AWS_REGION || '';
 const SOURCE_BUCKET_NAME = process.env.SOURCE_BUCKET_NAME || '';
 
@@ -42,7 +43,7 @@ export const handler: CodePipelineCloudWatchPipelineHandler = async (event) => {
     const head = await s3.send(
         new HeadObjectCommand({
             Bucket: SOURCE_BUCKET_NAME,
-            Key: 'repository-mirror.zip',
+            Key: `repository-${DEFAULT_BRANCH_NAME}.zip`,
             VersionId: mirrorVersion,
         }),
     );

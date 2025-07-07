@@ -214,6 +214,7 @@ export class MainPipeline extends Construct {
                 REPOSITORY_HOST: repository.host,
                 REPOSITORY_NAME: repository.name,
                 REPOSITORY_TOKEN_PARAM_NAME: repoTokenParam.parameterName,
+                DEFAULT_BRANCH_NAME: repository.defaultBranch || '',
                 SOURCE_BUCKET_NAME: sourceBucket.bucketName,
             },
         });
