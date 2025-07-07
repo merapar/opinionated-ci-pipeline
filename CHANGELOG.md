@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [4.3.0-beta.1](https://github.com/merapar/opinionated-ci-pipeline/compare/v4.3.0-beta.0...v4.3.0-beta.1) (2025-07-07)
+
+
+### Features
+
+* delete feature branch zip on branch destroy ([641d4e4](https://github.com/merapar/opinionated-ci-pipeline/commit/641d4e436bb62138d7dfc156b4154497bda86f4e)), closes [#15](https://github.com/merapar/opinionated-ci-pipeline/issues/15)
+
+
+### Bug Fixes
+
+* correct main pipeline repo file name to send build status ([329e997](https://github.com/merapar/opinionated-ci-pipeline/commit/329e997cfea9730d1b93f9ab64072afe4e0b3cbc))
+
 ## [4.3.0-beta.0](https://github.com/merapar/opinionated-ci-pipeline/compare/v4.2.0...v4.3.0-beta.0) (2025-07-01)
 
 
