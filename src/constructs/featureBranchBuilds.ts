@@ -36,7 +36,7 @@ export class FeatureBranchBuilds extends Construct {
         this.failuresTopic = this.createBuildFailuresTopic(deployProject);
 
         this.createDestroyProject(
-            props.sourceBucket, props.repository.defaultBranch, props.codeBuild, props.commands,
+            props.sourceBucket, props.codeBuild, props.commands,
         );
     }
 
@@ -115,7 +115,6 @@ export class FeatureBranchBuilds extends Construct {
 
     private createDestroyProject(
         sourceBucket: s3.IBucket,
-        defaultBranchName: string,
         codeBuild: FeatureBranchBuildsProps['codeBuild'],
         commands: FeatureBranchBuildsProps['commands'],
     ): Project {
@@ -123,7 +122,7 @@ export class FeatureBranchBuilds extends Construct {
             projectName: `${Stack.of(this).stackName}-featureBranch-destroy`,
             source: Source.s3({
                 bucket: sourceBucket,
-                path: `repository-${defaultBranchName}.zip`,
+                path: 'repository-file-placeholder-to-override.zip',
             }),
             ...codeBuild,
             environment: codeBuild.buildEnvironment,
@@ -143,6 +142,7 @@ export class FeatureBranchBuilds extends Construct {
                             ...(commands.preDestroyEnvironment || []),
                             ...commands.destroyEnvironment,
                             ...(commands.postDestroyEnvironment || []),
+                            'aws s3 rm s3://${CODEBUILD_SOURCE_REPO_URL}',
                         ],
                     },
                 },
@@ -151,6 +151,7 @@ export class FeatureBranchBuilds extends Construct {
 
         codeBuild.rolePolicy?.forEach(policy => destroyProject.addToRolePolicy(policy));
         sourceBucket.grantRead(destroyProject);
+        sourceBucket.grantDelete(destroyProject);
         this.grantAssumeCDKRoles(destroyProject);
 
         return destroyProject;
