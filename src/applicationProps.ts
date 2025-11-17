@@ -95,6 +95,13 @@ export interface ApplicationProps {
      * @default false
      */
     readonly fixPathsMetadata?: boolean;
+    /**
+     * Tags to apply to all stacks created by the CI stack
+     * (e.g., the main pipeline stack, feature branch environment stacks).
+        * Keys with falsy values are ignored.
+     * @default - no tags applied
+     */
+    readonly ciRequiredTags?: { [key: string]: string };
 }
 
 /**
