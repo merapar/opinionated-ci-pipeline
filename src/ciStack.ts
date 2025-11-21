@@ -20,7 +20,7 @@ export class CIStack extends Stack {
     constructor(scope: Construct, id: string, props: CIStackProps) {
         super(scope, id, props);
 
-        applyRequiredTagsToStack(this, props.ciRequiredTags || {});
+        applyRequiredTagsToStack(this, props.tags || {});
 
         const repositoryTokenParam = StringParameter.fromSecureStringParameterAttributes(this, 'RepositoryTokenParam', {
             parameterName: `/${getProjectName(this)}/ci/repositoryAccessToken`,
