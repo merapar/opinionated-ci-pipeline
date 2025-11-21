@@ -101,7 +101,7 @@ export interface ApplicationProps {
         * Keys with falsy values are ignored.
      * @default - no tags applied
      */
-    readonly ciRequiredTags?: { [key: string]: string };
+    readonly tags?: { [key: string]: string };
 }
 
 /**
