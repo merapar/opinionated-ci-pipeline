@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [4.4.0-beta.0](https://github.com/merapar/opinionated-ci-pipeline/compare/v4.3.0...v4.4.0-beta.0) (2025-11-24)
+
+
+### Features
+
+* Support global tags on all CI resources ([#19](https://github.com/merapar/opinionated-ci-pipeline/issues/19)) ([88e539c](https://github.com/merapar/opinionated-ci-pipeline/commit/88e539cc923cc945a472014b1043df60d1ea44a2))
+
 ## [4.3.0](https://github.com/merapar/opinionated-ci-pipeline/compare/v4.3.0-beta.1...v4.3.0) (2025-07-07)
 
 ## [4.3.0-beta.1](https://github.com/merapar/opinionated-ci-pipeline/compare/v4.3.0-beta.0...v4.3.0-beta.1) (2025-07-07)
