@@ -11,6 +11,7 @@ import {getProjectName} from './util/context';
 import {StringParameter} from 'aws-cdk-lib/aws-ssm';
 import {MirrorRepository} from './constructs/mirrorRepository';
 import {capitalizeFirstLetter} from './util/string';
+import { applyRequiredTagsToStack } from './util/tags';
 
 export interface CIStackProps extends StackProps, ResolvedApplicationProps {
 }
@@ -18,6 +19,8 @@ export interface CIStackProps extends StackProps, ResolvedApplicationProps {
 export class CIStack extends Stack {
     constructor(scope: Construct, id: string, props: CIStackProps) {
         super(scope, id, props);
+
+        applyRequiredTagsToStack(this, props.tags || {});
 
         const repositoryTokenParam = StringParameter.fromSecureStringParameterAttributes(this, 'RepositoryTokenParam', {
             parameterName: `/${getProjectName(this)}/ci/repositoryAccessToken`,
